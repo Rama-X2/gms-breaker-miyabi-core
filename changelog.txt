@@ -1,0 +1,45 @@
+『 GMS Breaker Miyabi Core v1.0.0 』
+
+## v1.0.0 – GMS Breaker Miyabi Core v1.0.0 (Account Safe Edition)
+
+### 🚀 Major Changes
+- Rebuilt runtime engine for Android 11–15
+- Full suspend-based Google Services isolation
+- AppOps hard-block for wakelock, run_in_background, boot, alarms
+- UID-level network isolation using iptables (owner match)
+- Force Device Idle integration (deep doze trigger)
+- Removed Google whitelist entries automatically
+- No Google account removal (Account Safe mode)
+
+### ⚡ Performance Improvements
+- Reduced Google Play Services CPU wake cycles
+- Eliminated background telemetry scheduling
+- Prevented Play Store auto wake
+- Blocked silent network sync from GMSCore
+- Improved idle state stability on MIUI
+
+### 🔋 Battery Optimization
+- Aggressive wakelock denial
+- Alarm manager restriction
+- Background execution denial
+- Doze enforcement
+
+### 🛡 Stability Improvements
+- Safe for Android 11–15
+- Compatible with MIUI & SuperiorOS
+- Universal AOSP fallback
+- No system.prop modification (clean implementation)
+- Minimal sepolicy rules (no permissive mode)
+
+### ❌ Removed
+- No package removal
+- No account wipe
+- No persistent system modification
+
+---
+
+## Known Behavior
+- Push notifications will not work
+- Google-dependent apps may fail
+- Play Store background sync disabled
+- Intended for gaming / offline performance mode

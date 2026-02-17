@@ -1,0 +1,13 @@
+# Allow Magisk daemon to control network (iptables owner match)
+allow magiskd self:capability net_admin;
+allow magiskd self:capability net_raw;
+
+# Allow access to proc_net for UID network isolation
+allow magiskd proc_net:file { read write open getattr };
+
+# Allow access to sysfs (device idle / power control)
+allow magiskd sysfs:file { read write open getattr };
+
+# Allow interaction with system_server for appops & suspend
+allow magiskd system_server:binder call;
+allow magiskd system_server:service_manager find;
