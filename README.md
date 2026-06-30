@@ -1,114 +1,88 @@
 # 🌸 GMS Breaker Miyabi Core
 
-### Account-Safe Maximum Performance Mode
+### ⚡ Universal & Ultimate Account-Safe Google Services Isolation
 
-GMS Breaker Miyabi Core is a Magisk module designed to aggressively isolate Google Play Services at runtime without deleting Google accounts or modifying system partitions.
+GMS Breaker Miyabi Core is an advanced, ultra-performance Magisk/KernelSU/APatch module designed to aggressively isolate Google Play Services at runtime. It completely halts background telemetry, wakelocks, and sync without deleting Google accounts or modifying system partitions.
 
-This module is built for users who prioritize:
-
-- Maximum performance
-- Lower CPU wake cycles
-- Reduced RAM usage
-- Minimal background telemetry
-- Gaming-focused optimization
-- Better idle battery life
+Built for users who prioritize **maximum gaming consistency, lower thermal throttling, reduced RAM footprint, and maximum battery life.**
 
 ---
 
-## Features
+## 🚀 Key Upgrades in v2.0.0
 
-### Runtime Isolation Engine
-- Suspend Google Play Services packages
-- Continuous force-stop loop
-- Remove device idle whitelist entries
-- Enforce deep doze state
+### 🛡️ 100% Universal Root Compatibility
+- Works out-of-the-box on **Magisk**, **KernelSU**, and **APatch**.
+- Uses system-native `/system/bin/sh` shebangs and standard shell POSIX syntax rather than hardcoded Magisk-only paths.
 
-### AppOps Hard Restriction
-- Deny background execution
-- Deny wakelocks
-- Deny alarm scheduling
-- Deny boot completion
-- Deny background service start
+### 👥 Dual Apps & Multi-User Support
+- Automatically scans and isolates GMS instances across all users on the device (User 0, Work Profiles, Parallel Space, Island, Shelter, Xiaomi Dual Apps, etc.).
 
-### Network Isolation
-- UID-based iptables isolation
-- Blocks silent background sync
-- Prevents hidden telemetry activity
+### 🔒 IPv4 + IPv6 Network Isolation
+- Dynamically resolves UIDs for all target packages and drops both IPv4 (`iptables`) and IPv6 (`ip6tables`) traffic.
+- **Leak Fix**: Implements safety checks to prevent rule duplication, solving networking overhead and memory leaks present in older versions.
 
-### Account-Safe Design
-- Does NOT remove Google accounts
-- Does NOT delete data partitions
-- Fully reversible by disabling module
+### 🍃 Ultra-Lightweight Native Daemon Loop
+- Heavy Java VM commands (`cmd` / `am`) are replaced with lightweight native `pkill`/`pgrep` checks.
+- Runs with virtually zero CPU overhead, executing periodic deep audits only if GMS is detected waking up or every 5 minutes.
 
 ---
 
-## Target Compatibility
-
-- Android 11
-- Android 12
-- Android 13
-- Android 14
-- Android 15
-
-Optimized for:
-- MIUI
-- SuperiorOS
-
-Universal AOSP compatible.
-
----
-
-## Expected Behavior
-
-After installation:
-
-- Google Play Services will be suspended
-- Push notifications will stop working
-- Play Store background sync disabled
-- Google apps may not function correctly
-- System performance becomes more consistent under load
-- Reduced idle battery drain
+## 📦 Targeted Packages
+The module dynamically isolates the following packages if they are installed:
+- `com.google.android.gms` (Google Play Services)
+- `com.google.android.gsf` (Google Services Framework)
+- `com.android.vending` (Google Play Store)
+- `com.google.android.gms.setup` (GMS Setup Wizard)
+- `com.google.android.feedback` (Google Feedback/Crash Reporting)
+- `com.google.android.partnersetup` (Google Partner Setup)
+- `com.google.android.onetimeinitializer` (One-Time Initializer)
+- `com.google.android.backuptransport` (Backup Transport)
+- `com.google.android.syncadapters.contacts` (Contacts Sync)
+- `com.google.android.syncadapters.calendar` (Calendar Sync)
 
 ---
 
-## Who Should Use This?
+## ⚙️ How It Works
 
-- Gamers
-- Performance enthusiasts
-- Users who do not rely on Google push services
-- Users who toggle module ON/OFF manually
+1. **Initial Setup (At Boot)**:
+   - Removes target packages from the global deviceidle whitelist.
+   - Sets App Standby Buckets to `restricted` (Android 12+) or `rare` (Android < 12).
+   - Suspends packages across all user profiles.
+   - Sets critical AppOps to `ignore` (`RUN_IN_BACKGROUND`, `WAKE_LOCK`, `START_FOREGROUND`, `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `GET_USAGE_STATS`, `SYSTEM_ALERT_WINDOW`, `WRITE_SETTINGS`).
+   - Appends firewall rules to block network access for target UIDs.
 
----
-
-## Who Should NOT Use This?
-
-- Banking app users
-- Real-time notification dependent users
-- Users requiring Google authentication services constantly
-
----
-
-## Safety Design
-
-- No system.prop modifications
-- Minimal SELinux policy rules
-- No permissive mode
-- No system partition changes
-- Fully reversible
+2. **Daemon Loop (Every 20 Seconds)**:
+   - Uses native `pgrep` to check if any GMS components are running.
+   - If running, terminates them immediately via `pkill -9` and re-suspends them.
+   - Enforces firewall rules and triggers a device deep-idle cycle.
+   - Runs a full deep restriction re-apply cycle every 5 minutes.
 
 ---
 
-## How To Restore Normal Behavior
+## 🎯 Compatibility
 
-Simply disable the module in Magisk and reboot.
-
-Your Google account remains intact.
-No need to login again.
+- **Android Versions**: Android 10, 11, 12, 13, 14, 15+
+- **OS Flavors**: Stock Android, AOSP, MIUI, HyperOS, ColorOS, RealmeUI, OneUI, custom ROMs (SuperiorOS, LineageOS, Pixel Experience, etc.)
+- **Chipsets**: Snapdragon, MediaTek, Exynos, Tensor, Unisoc
 
 ---
 
-## Disclaimer
+## ⚠️ Expected Behavior & Disclaimer
 
-This module is aggressive by design.
-Use at your own risk.
+- Google Play Services will be completely suspended.
+- Google push notifications (FCM) will stop working.
+- Play Store downloading and sync will be paused.
+- Google apps requiring sign-in or GMS (like YouTube, Drive, Maps) may not function correctly while the module is active.
+- **Account-Safe**: Disabling the module in your root manager and rebooting fully restores normal behavior instantly without logging out.
+
+---
+
+## 🧹 Clean Uninstallation
+
+When you disable/remove the module and reboot, the dynamic uninstallation script automatically:
+1. Dynamic UID lookup removes all IPv4 & IPv6 firewall rules.
+2. Un-suspends all target packages across all active user profiles.
+3. Resets AppOps back to default values.
+4. Restores packages to the deviceidle whitelist.
+
 

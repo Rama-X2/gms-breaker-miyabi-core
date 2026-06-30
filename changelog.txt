@@ -1,4 +1,22 @@
-『 GMS Breaker Miyabi Core v1.0.0 』
+『 GMS Breaker Miyabi Core v2.0.0 』
+
+## v2.0.0 – Universal Rewrite (Performance & Compatibility Overhaul)
+
+### 🚀 Major Changes
+- **Universal Root Support**: Fully compatible with Magisk, KernelSU, and APatch out-of-the-box.
+- **Multi-User & Parallel Space Support**: Automatically scans and isolates GMS in Dual Apps, Work Profiles, Secure Folder, and sandbox profiles.
+- **IPv4 + IPv6 Network Isolation**: Added full ip6tables support alongside iptables to prevent GMS background sync over IPv6.
+- **Engine Overhaul (Zero-CPU Loop)**: Caches user lists and firewall UIDs on boot. Spawns C-level native `pgrep`/`pkill` checks instead of heavy Java VM commands in the loop.
+- **App Standby Bucket Restriction**: Forces Google packages to the `restricted` (Android 12+) or `rare` (Android < 12) system bucket.
+- **Dynamic Uninstallation**: Dynamically resolves package UIDs on uninstall to completely clean all firewall rules, reset AppOps, and unsuspend packages for all users.
+
+### ⚡ Bug Fixes & Optimizations
+- **Solved Firewall Leak**: Implemented rule existence checks (`-C` check) before adding, preventing network lag and memory leaks.
+- **Removed Shell Execution Bugs**: Cleaned dynamic shell output using `tr -d '\r'` to prevent hidden carriage return errors.
+- **Cleaned Boot Script**: Emptied post-fs-data.sh since early-boot service commands fail before services start. Moved all logic to post-boot service.sh.
+- **Optimized Force-Idle**: Adjusted doze cycles to 120 seconds to be more battery-friendly.
+
+---
 
 ## v1.0.0 – GMS Breaker Miyabi Core v1.0.0 (Account Safe Edition)
 
