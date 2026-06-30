@@ -8,6 +8,7 @@
 - **IPv4 + IPv6 Network Isolation**: Added full ip6tables support alongside iptables to prevent GMS background sync over IPv6.
 - **Engine Overhaul (Zero-CPU Loop)**: Caches user lists and firewall UIDs on boot. Spawns C-level native `pgrep`/`pkill` checks instead of heavy Java VM commands in the loop.
 - **App Standby Bucket Restriction**: Forces Google packages to the `restricted` (Android 12+) or `rare` (Android < 12) system bucket.
+- **Miyabi CLI Tool (`miyabi`)**: Added a terminal control utility allowing users to dynamically turn the breaker ON/OFF (`su -c miyabi on/off`) or check status in Termux instantly without rebooting.
 - **Dynamic Uninstallation**: Dynamically resolves package UIDs on uninstall to completely clean all firewall rules, reset AppOps, and unsuspend packages for all users.
 
 ### ⚡ Bug Fixes & Optimizations

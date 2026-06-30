@@ -1,0 +1,61 @@
+#!/system/bin/sh
+
+# Show usage if no args or invalid args
+if [ -z "$1" ] || { [ "$1" != "on" ] && [ "$1" != "off" ] && [ "$1" != "status" ]; }; then
+  echo "============================================="
+  echo "      🌸 GMS Breaker Miyabi Core CLI 🌸      "
+  echo "============================================="
+  echo "Penggunaan / Usage:"
+  echo "  miyabi on      - Aktifkan GMS Breaker (Bekukan GMS)"
+  echo "  miyabi off     - Matikan GMS Breaker (Aktifkan GMS)"
+  echo "  miyabi status  - Cek status isolasi saat ini"
+  echo "============================================="
+  exit 0
+fi
+
+FLAG_FILE="/data/adb/miyabi_disabled"
+
+case "$1" in
+  on)
+    if [ -f "$FLAG_FILE" ]; then
+      rm -f "$FLAG_FILE"
+      echo "[+] GMS Breaker Miyabi Core: AKTIF (GMS akan segera dibekukan)"
+    else
+      echo "[!] GMS Breaker sudah dalam kondisi aktif."
+    fi
+    ;;
+  off)
+    if [ ! -f "$FLAG_FILE" ]; then
+      touch "$FLAG_FILE"
+      echo "[+] GMS Breaker Miyabi Core: DINONAKTIFKAN SEMENTARA (GMS aktif)"
+    else
+      echo "[!] GMS Breaker sudah dalam kondisi dinonaktifkan."
+    fi
+    ;;
+  status)
+    echo "============================================="
+    echo "            Miyabi Core Status               "
+    echo "============================================="
+    if [ -f "$FLAG_FILE" ]; then
+      echo "Breaker Status : DINONAKTIFKAN SEMENTARA (GMS Aktif)"
+    else
+      echo "Breaker Status : AKTIF (GMS Terisolasi)"
+    fi
+    
+    # Check GMS process status
+    if pgrep -f com.google.android.gms >/dev/null; then
+      echo "Proses GMS     : Berjalan (Running)"
+    else
+      echo "Proses GMS     : Ditangguhkan (Suspended/Stopped)"
+    fi
+    
+    # Check GMS network block status
+    GMS_UID=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:com.google.android.gms " | cut -d' ' -f2 | cut -d':' -f2 | cut -d',' -f1 )
+    if [ -n "$GMS_UID" ] && iptables -C OUTPUT -m owner --uid-owner "$GMS_UID" -j DROP 2>/dev/null; then
+      echo "Blokir Jaringan: Aktif (Blocked)"
+    else
+      echo "Blokir Jaringan: Tidak Aktif (Allowed)"
+    fi
+    echo "============================================="
+    ;;
+esac

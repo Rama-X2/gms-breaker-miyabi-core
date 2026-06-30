@@ -90,14 +90,66 @@ initialize_gms_breaker() {
   done
 }
 
-# Run the initial deep isolation setup
-initialize_gms_breaker
+# State tracking for live toggles
+CURRENT_STATE="active"
+
+# Run the initial deep isolation setup if enabled on boot
+if [ ! -f "/data/adb/miyabi_disabled" ]; then
+  initialize_gms_breaker
+else
+  CURRENT_STATE="disabled"
+fi
 
 # Counter for periodic deep checks (every 5 minutes / 300 seconds)
 DEEP_CHECK_INTERVAL=15
 COUNTER=0
 
 while true; do
+  # Check if breaker is temporarily disabled via CLI
+  if [ -f "/data/adb/miyabi_disabled" ]; then
+    if [ "$CURRENT_STATE" = "active" ]; then
+      # Turn off breaker: unsuspend packages, restore appops, remove firewall rules
+      USER_IDS=$(get_users)
+      if [ -z "$USER_IDS" ]; then
+        USER_IDS="0"
+      fi
+      
+      # Clean up network blocks
+      for P in $TARGET_PACKAGES; do
+        uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P " | cut -d' ' -f2 | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
+        for UID in $uids; do
+          if [ -n "$UID" ]; then
+            while iptables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null; do
+              iptables -D OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
+            done
+            while ip6tables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null; do
+              ip6tables -D OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
+            done
+          fi
+        done
+        
+        # Unsuspend and reset AppOps
+        for U in $USER_IDS; do
+          cmd package unsuspend --user "$U" "$P" >/dev/null 2>&1 || cmd package unsuspend "$P" >/dev/null 2>&1
+          cmd appops reset --user "$U" "$P" >/dev/null 2>&1 || cmd appops reset "$P" >/dev/null 2>&1
+        done
+        
+        # Re-whitelist in deviceidle
+        cmd deviceidle whitelist +"$P" >/dev/null 2>&1
+      done
+      
+      CURRENT_STATE="disabled"
+    fi
+    sleep 20
+    continue
+  else
+    if [ "$CURRENT_STATE" = "disabled" ]; then
+      # Re-enable breaker
+      initialize_gms_breaker
+      CURRENT_STATE="active"
+    fi
+  fi
+
   # 1. Kill any running instances of target packages (highly efficient native pkill)
   # Uses TARGET_PACKAGES to handle boot-time package manager ready race conditions
   for P in $TARGET_PACKAGES; do

@@ -77,6 +77,26 @@ The module dynamically isolates the following packages if they are installed:
 
 ---
 
+## 🛠️ Miyabi CLI (Dynamic Live Toggle)
+
+GMS Breaker Miyabi Core v2.0.0 features a command-line terminal utility to control the GMS blocking status in real-time **without needing a device reboot**. You can run these commands from any terminal emulator (such as Termux) with root access.
+
+### Terminal Commands:
+* **Temporarily Disable GMS Breaker** (Activate GMS for Play Store downloads, contact sync, or authentication):
+  ```bash
+  su -c miyabi off
+  ```
+* **Re-enable GMS Breaker** (Instantly freeze GMS and optimize background environment for maximum gaming performance):
+  ```bash
+  su -c miyabi on
+  ```
+* **Check Isolation & Firewall Status**:
+  ```bash
+  su -c miyabi status
+  ```
+
+---
+
 ## 🧹 Clean Uninstallation
 
 When you disable/remove the module and reboot, the dynamic uninstallation script automatically:
