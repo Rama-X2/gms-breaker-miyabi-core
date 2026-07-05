@@ -2,20 +2,21 @@
 
 ## v2.4.0 – CLI & Uninstaller Fixes (Major Stability Update)
 
-### 🚀 Major Changes
+### Major Changes
 - **Miyabi CLI Permissions Fix**: Added `customize.sh` script to automatically set `0755` executable permissions for the CLI script (`/system/bin/miyabi`), resolving the issue where root terminals returned "not found" or "permission denied" on APatch/KernelSU/Magisk.
 - **Robust CLI Argument Parsing**: Simplified CLI argument checks to prevent KornShell syntax parser errors in older system shells.
 - **Terminal Root Verification**: Added root checks (`[ "$(id -u)" -ne 0 ]`) to the `miyabi` script to output a clear error message in Indonesian if executed without root privileges.
 - **Dynamic Uninstaller Delay**: Refactored `uninstall.sh` to run in a background subshell that waits for `sys.boot_completed=1` and stabilizes for 10 seconds. This guarantees GMS packages are successfully unsuspended and firewall rules are deleted cleanly when the module is removed.
 
-### ⚡ Bug Fixes & Optimizations
+### Bug Fixes & Optimizations
 - **Bulletproof UID Resolution**: Replaced the package list cut/grep parsing logic in `service.sh` and `uninstall.sh` with a highly robust regex parser (`grep -oE "uid:[0-9,]+"`) to eliminate whitespace parsing differences in custom ROMs.
+
 
 ---
 
 ## v2.0.0 – Universal Rewrite (Performance & Compatibility Overhaul)
 
-### 🚀 Major Changes
+### Major Changes
 - **Universal Root Support**: Fully compatible with Magisk, KernelSU, and APatch out-of-the-box.
 - **Multi-User & Parallel Space Support**: Automatically scans and isolates GMS in Dual Apps, Work Profiles, Secure Folder, and sandbox profiles.
 - **IPv4 + IPv6 Network Isolation**: Added full ip6tables support alongside iptables to prevent GMS background sync over IPv6.
@@ -34,7 +35,7 @@
 
 ## v1.0.0 – GMS Breaker Miyabi Core v1.0.0 (Account Safe Edition)
 
-### 🚀 Major Changes
+### Major Changes
 - Rebuilt runtime engine for Android 11–15
 - Full suspend-based Google Services isolation
 - AppOps hard-block for wakelock, run_in_background, boot, alarms
@@ -43,27 +44,27 @@
 - Removed Google whitelist entries automatically
 - No Google account removal (Account Safe mode)
 
-### ⚡ Performance Improvements
+### Performance Improvements
 - Reduced Google Play Services CPU wake cycles
 - Eliminated background telemetry scheduling
 - Prevented Play Store auto wake
 - Blocked silent network sync from GMSCore
 - Improved idle state stability on MIUI
 
-### 🔋 Battery Optimization
+### Battery Optimization
 - Aggressive wakelock denial
 - Alarm manager restriction
 - Background execution denial
 - Doze enforcement
 
-### 🛡 Stability Improvements
+### Stability Improvements
 - Safe for Android 11–15
 - Compatible with MIUI & SuperiorOS
 - Universal AOSP fallback
 - No system.prop modification (clean implementation)
 - Minimal sepolicy rules (no permissive mode)
 
-### ❌ Removed
+### Removed
 - No package removal
 - No account wipe
 - No persistent system modification
