@@ -1,6 +1,6 @@
 # 🌸 GMS Breaker Miyabi Core
 
-### ⚡ Universal & Ultimate Account-Safe Google Services Isolation
+### Universal & Ultimate Account-Safe Google Services Isolation
 
 GMS Breaker Miyabi Core is an advanced, ultra-performance Magisk/KernelSU/APatch module designed to aggressively isolate Google Play Services at runtime. It completely halts background telemetry, wakelocks, and sync without deleting Google accounts or modifying system partitions.
 
@@ -8,26 +8,26 @@ Built for users who prioritize **maximum gaming consistency, lower thermal throt
 
 ---
 
-## 🚀 Key Upgrades in v2.5.0
+## Key Upgrades in v2.5.0
 
-### 🛡️ 100% Universal Root Compatibility
+### 100% Universal Root Compatibility
 - Works out-of-the-box on **Magisk**, **KernelSU**, and **APatch**.
 - Uses system-native `/system/bin/sh` shebangs and standard shell POSIX syntax rather than hardcoded Magisk-only paths.
 
-### 👥 Dual Apps & Multi-User Support
+### Dual Apps & Multi-User Support
 - Automatically scans and isolates GMS instances across all users on the device (User 0, Work Profiles, Parallel Space, Island, Shelter, Xiaomi Dual Apps, etc.).
 
-### 🔒 IPv4 + IPv6 Network Isolation
+### IPv4 + IPv6 Network Isolation
 - Dynamically resolves UIDs for all target packages and drops both IPv4 (`iptables`) and IPv6 (`ip6tables`) traffic.
 - **Leak Fix**: Implements safety checks to prevent rule duplication, solving networking overhead and memory leaks present in older versions.
 
-### 🍃 Ultra-Lightweight Native Daemon Loop
+### Ultra-Lightweight Native Daemon Loop
 - Heavy Java VM commands (`cmd` / `am`) are replaced with lightweight native `pkill`/`pgrep` checks.
 - Runs with virtually zero CPU overhead, executing periodic deep audits only if GMS is detected waking up or every 5 minutes.
 
 ---
 
-## 📦 Targeted Packages
+## Targeted Packages
 The module dynamically isolates the following packages if they are installed:
 - `com.google.android.gms` (Google Play Services)
 - `com.google.android.gsf` (Google Services Framework)
@@ -46,7 +46,7 @@ The module dynamically isolates the following packages if they are installed:
 
 ---
 
-## ⚙️ How It Works
+## How It Works
 
 1. **Initial Setup (At Boot)**:
    - Removes target packages from the global deviceidle whitelist.
@@ -63,7 +63,7 @@ The module dynamically isolates the following packages if they are installed:
 
 ---
 
-## 🎯 Compatibility
+## Compatibility
 
 - **Android Versions**: Android 10, 11, 12, 13, 14, 15+
 - **OS Flavors**: Stock Android, AOSP, MIUI, HyperOS, ColorOS, RealmeUI, OneUI, custom ROMs (SuperiorOS, LineageOS, Pixel Experience, etc.)
@@ -71,7 +71,7 @@ The module dynamically isolates the following packages if they are installed:
 
 ---
 
-## ⚠️ Expected Behavior & Disclaimer
+## Expected Behavior & Disclaimer
 
 - Google Play Services will be completely suspended.
 - Google push notifications (FCM) will stop working.
@@ -81,7 +81,7 @@ The module dynamically isolates the following packages if they are installed:
 
 ---
 
-## 🛠️ Miyabi CLI (Dynamic Live Toggle)
+## Miyabi CLI (Dynamic Live Toggle)
 
 GMS Breaker Miyabi Core v2.5.0 features a command-line terminal utility to control the GMS blocking status in real-time **without needing a device reboot**. You can run these commands from any terminal emulator (such as Termux) with root access.
 
@@ -104,7 +104,7 @@ GMS Breaker Miyabi Core v2.5.0 features a command-line terminal utility to contr
 
 ---
 
-## 🧹 Clean Uninstallation
+## Clean Uninstallation
 
 When you disable/remove the module and reboot, the dynamic uninstallation script automatically:
 1. Dynamic UID lookup removes all IPv4 & IPv6 firewall rules.
