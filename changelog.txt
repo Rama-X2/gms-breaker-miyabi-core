@@ -1,4 +1,17 @@
-『 GMS Breaker Miyabi Core v2.0.0 』
+『 GMS Breaker Miyabi Core v2.4.0 』
+
+## v2.4.0 – CLI & Uninstaller Fixes (Major Stability Update)
+
+### 🚀 Major Changes
+- **Miyabi CLI Permissions Fix**: Added `customize.sh` script to automatically set `0755` executable permissions for the CLI script (`/system/bin/miyabi`), resolving the issue where root terminals returned "not found" or "permission denied" on APatch/KernelSU/Magisk.
+- **Robust CLI Argument Parsing**: Simplified CLI argument checks to prevent KornShell syntax parser errors in older system shells.
+- **Terminal Root Verification**: Added root checks (`[ "$(id -u)" -ne 0 ]`) to the `miyabi` script to output a clear error message in Indonesian if executed without root privileges.
+- **Dynamic Uninstaller Delay**: Refactored `uninstall.sh` to run in a background subshell that waits for `sys.boot_completed=1` and stabilizes for 10 seconds. This guarantees GMS packages are successfully unsuspended and firewall rules are deleted cleanly when the module is removed.
+
+### ⚡ Bug Fixes & Optimizations
+- **Bulletproof UID Resolution**: Replaced the package list cut/grep parsing logic in `service.sh` and `uninstall.sh` with a highly robust regex parser (`grep -oE "uid:[0-9,]+"`) to eliminate whitespace parsing differences in custom ROMs.
+
+---
 
 ## v2.0.0 – Universal Rewrite (Performance & Compatibility Overhaul)
 

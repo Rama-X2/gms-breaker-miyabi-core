@@ -77,7 +77,7 @@ initialize_gms_breaker() {
   # Caches the UIDs globally to prevent Java VM execution inside the 20-second loop
   BLOCKED_UIDS=""
   for P in $INSTALLED_PACKAGES; do
-    uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P " | cut -d' ' -f2 | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
+    uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P($|[[:space:]])" | grep -oE "uid:[0-9,]+" | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
     for UID in $uids; do
       if [ -n "$UID" ]; then
         BLOCKED_UIDS="$BLOCKED_UIDS $UID"
@@ -116,7 +116,7 @@ while true; do
       
       # Clean up network blocks
       for P in $TARGET_PACKAGES; do
-        uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P " | cut -d' ' -f2 | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
+        uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P($|[[:space:]])" | grep -oE "uid:[0-9,]+" | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
         for UID in $uids; do
           if [ -n "$UID" ]; then
             while iptables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null; do

@@ -3,6 +3,15 @@
 # Licensed under the GNU General Public License, Version 3.0
 # Source: https://github.com/Rama-X2/gms-breaker-miyabi-core
 
+(
+# Wait for boot completion so system services (pm/cmd) are active
+until [ "$(getprop sys.boot_completed)" = "1" ]; do
+  sleep 5
+done
+
+# Wait for system services to stabilize
+sleep 10
+
 TARGET_PACKAGES="
 com.google.android.gms
 com.google.android.gsf
@@ -27,7 +36,7 @@ fi
 
 for P in $TARGET_PACKAGES; do
   # Get UIDs dynamically for this package and clean carriage returns (\r)
-  uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P " | cut -d' ' -f2 | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
+  uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P($|[[:space:]])" | grep -oE "uid:[0-9,]+" | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
   for UID in $uids; do
     if [ -n "$UID" ]; then
       # Delete all instances of the IPv4 block rule
@@ -50,4 +59,8 @@ for P in $TARGET_PACKAGES; do
   # Add back to deviceidle whitelist
   cmd deviceidle whitelist +"$P" >/dev/null 2>&1
 done
+
+# Clean up terminal command flag if it remains
+rm -f /data/adb/miyabi_disabled
+) &
 
