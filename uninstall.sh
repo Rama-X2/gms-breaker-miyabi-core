@@ -23,6 +23,10 @@ com.google.android.onetimeinitializer
 com.google.android.backuptransport
 com.google.android.syncadapters.contacts
 com.google.android.syncadapters.calendar
+com.google.android.projection.gearhead
+com.google.android.apps.gcs
+com.google.android.gms.policy_sidecar
+com.google.android.printservice.recommendation
 "
 
 get_users() {
@@ -60,7 +64,9 @@ for P in $TARGET_PACKAGES; do
   cmd deviceidle whitelist +"$P" >/dev/null 2>&1
 done
 
-# Clean up terminal command flag if it remains
+# Clean up terminal command flag and symlinks if they remain
 rm -f /data/adb/miyabi_disabled
+rm -f /data/adb/ksu/bin/miyabi
+rm -f /data/adb/apatch/bin/miyabi
 ) &
 

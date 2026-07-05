@@ -12,6 +12,9 @@ done
 # Wait for system services to settle
 sleep 15
 
+# Reset CLI temporary flag on boot to ensure GMS Breaker is always active after a reboot (Self-Healing)
+rm -f /data/adb/miyabi_disabled
+
 # Define target packages to isolate
 TARGET_PACKAGES="
 com.google.android.gms
@@ -24,6 +27,10 @@ com.google.android.onetimeinitializer
 com.google.android.backuptransport
 com.google.android.syncadapters.contacts
 com.google.android.syncadapters.calendar
+com.google.android.projection.gearhead
+com.google.android.apps.gcs
+com.google.android.gms.policy_sidecar
+com.google.android.printservice.recommendation
 "
 
 # Helper to find all active Android users (Owner, Dual Apps, Work Profile, etc.)

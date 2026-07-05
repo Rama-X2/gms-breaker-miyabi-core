@@ -1,4 +1,14 @@
-『 GMS Breaker Miyabi Core v2.4.0 』
+『 GMS Breaker Miyabi Core v2.5.0 』
+
+## v2.5.0 – CLI Path Fallback & Package Expansion (Ultimate Stability)
+
+### Major Changes
+- **KSU & APatch Path Fallbacks**: Symlinks the `miyabi` CLI utility directly to `/data/adb/ksu/bin/miyabi` and `/data/adb/apatch/bin/miyabi` during installation. This fixes the terminal execution issues on ROMs or kernels that lack overlayfs mounting support.
+- **Self-Healing Boot Reset**: Automatically deletes the temporary CLI disable flag (`/data/adb/miyabi_disabled`) during device boot. If the user forgets to re-enable the GMS Breaker, it automatically re-arms and freezes Google on the next reboot.
+- **Expanded Google Isolation**: Added 4 new background Google packages to the target list (Android Auto, Google Connectivity Services, GMS Policy Sidecar, and Print Recommendation) to achieve the ultimate GMS freeze.
+- **Uninstall Symlinks Cleanup**: Automatically removes KSU/APatch bin symlinks when the module is uninstalled.
+
+---
 
 ## v2.4.0 – CLI & Uninstaller Fixes (Major Stability Update)
 
@@ -25,7 +35,7 @@
 - **Miyabi CLI Tool (`miyabi`)**: Added a terminal control utility allowing users to dynamically turn the breaker ON/OFF (`su -c miyabi on/off`) or check status in Termux instantly without rebooting.
 - **Dynamic Uninstallation**: Dynamically resolves package UIDs on uninstall to completely clean all firewall rules, reset AppOps, and unsuspend packages for all users.
 
-### ⚡ Bug Fixes & Optimizations
+### Bug Fixes & Optimizations
 - **Solved Firewall Leak**: Implemented rule existence checks (`-C` check) before adding, preventing network lag and memory leaks.
 - **Removed Shell Execution Bugs**: Cleaned dynamic shell output using `tr -d '\r'` to prevent hidden carriage return errors.
 - **Cleaned Boot Script**: Emptied post-fs-data.sh since early-boot service commands fail before services start. Moved all logic to post-boot service.sh.
