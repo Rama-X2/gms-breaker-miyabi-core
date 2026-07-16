@@ -3,6 +3,13 @@
 # Copyright (C) 2026 Rama-X2
 # Licensed under the GNU General Public License, Version 3.0
 
+# Force-extract the entire ZIP file to ensure KSU/APatch/Magisk compatibility
+ui_print "- Extracting module files..."
+unzip -o "$ZIPFILE" -d "$MODPATH" 2>/dev/null
+
+# Remove skip_mount if it was automatically created by a previous failed install
+rm -f "$MODPATH/skip_mount"
+
 # Detect and fix nested zip extraction (common issue when zipping parent folder)
 for dir in "$MODPATH"/*; do
   if [ -d "$dir" ] && [ -f "$dir/module.prop" ]; then
@@ -10,6 +17,14 @@ for dir in "$MODPATH"/*; do
     mv "$dir"/* "$MODPATH/" 2>/dev/null
     rm -rf "$dir" 2>/dev/null
     break
+  fi
+done
+
+# Clean carriage returns (dos2unix) on all executable scripts to prevent boot/run failures
+ui_print "- Cleaning carriage returns (dos2unix)..."
+for file in "$MODPATH"/system/bin/miyabi "$MODPATH"/service.sh "$MODPATH"/uninstall.sh "$MODPATH"/post-fs-data.sh; do
+  if [ -f "$file" ]; then
+    tr -d '\r' < "$file" > "$file.tmp" && mv "$file.tmp" "$file"
   fi
 done
 

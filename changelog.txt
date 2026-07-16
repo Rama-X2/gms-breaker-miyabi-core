@@ -1,4 +1,10 @@
-『 GMS Breaker Miyabi Core v2.6.1 』
+## v2.6.2 – Installation & Extraction Enforcement Hotfix (Critical Fix)
+
+###  Major Changes
+- **Enforced File Extraction**: Added explicit `unzip -o "$ZIPFILE"` extraction commands directly inside `customize.sh`. This ensures that even if custom recoveries, alternative root managers, or specific installer templates skip extracting the `system` folder or `service.sh`, they are force-extracted during installation.
+- **skip_mount Cleanup**: Programmed automatic deletion of any legacy or system-generated `skip_mount` flag file in the module folder during installation to prevent mounting skips.
+
+---
 
 ## v2.6.1 – CLI & Execution Protection Hotfix (Line Endings & Permission Safety)
 
