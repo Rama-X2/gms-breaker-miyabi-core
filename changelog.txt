@@ -1,3 +1,11 @@
+## v2.6.7 – Magisk Manager App Startup Freeze Fix (Critical Stability Release)
+
+###  Major Changes
+- **Magisk Manager App Startup Freeze Fix**: Removed the `pkill -STOP` and `pkill -CONT` kernel-level process suspension commands. Freezing GMS at the kernel level caused synchronous IPC/Binder calls from client apps (like Magisk Manager checking SafetyNet status on launch) to hang indefinitely in the kernel binder driver, crashing the calling apps. Returning to pure `am force-stop` and `cmd package suspend` ensures binder transactions fail fast instead of blocking.
+- **Uninstallation Cleaning**: Re-cleaned `uninstall.sh` and simplified the CLI process check to match.
+
+---
+
 ## v2.6.6 – Magisk Manager Flashing Crash Fix (Critical Hotfix)
 
 ###  Major Changes

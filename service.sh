@@ -155,11 +155,6 @@ while true; do
         cmd deviceidle whitelist +"$P" >/dev/null 2>&1
       done
       
-      # Resume all frozen Google/GSF/Store processes (SIGCONT)
-      for PROC in $PROCESS_PATTERNS; do
-        pkill -CONT -f "$PROC" >/dev/null 2>&1
-      done
-      
       CURRENT_STATE="disabled"
     fi
     sleep 20
@@ -182,10 +177,7 @@ while true; do
     fi
   done
 
-  # 2. Freeze Google/GSF/Store processes in the kernel (SIGSTOP) to prevent restarts
-  for PROC in $PROCESS_PATTERNS; do
-    pkill -STOP -f "$PROC" >/dev/null 2>&1
-  done
+
 
   # 2. Enforce network blocks using pre-resolved UIDs (zero Java vm overhead!)
   for UID in $BLOCKED_UIDS; do

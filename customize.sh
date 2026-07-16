@@ -11,7 +11,7 @@ ui_print "                     /l、                          "
 ui_print "                   (ﾟ､ ｡ 7                        "
 ui_print "                   l、 ~ヽ                        "
 ui_print "                   じしf_, )ノ                     "
-ui_print "     『 GMS Breaker Miyabi Core v2.6.6 』          "
+ui_print "     『 GMS Breaker Miyabi Core v2.6.7 』          "
 ui_print "=================================================="
 ui_print " - Target Environment: Universal (Magisk/KSU/APatch)"
 

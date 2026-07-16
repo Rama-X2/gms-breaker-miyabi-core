@@ -64,10 +64,7 @@ for P in $TARGET_PACKAGES; do
   cmd deviceidle whitelist +"$P" >/dev/null 2>&1
 done
 
-# Resume any frozen Google/GSF/Store processes (SIGCONT)
-for PROC in com.google.android.gms com.google.process.gservices com.android.vending com.google.android.gsf com.google.android.apps.gcs com.google.android.projection.gearhead; do
-  pkill -CONT -f "$PROC" >/dev/null 2>&1
-done
+
 
 # Clean up terminal command flag and copied CLI binaries if they remain
 rm -f /data/adb/miyabi_disabled
