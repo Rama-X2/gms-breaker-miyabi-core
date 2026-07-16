@@ -1,3 +1,11 @@
+## v2.6.6 – Magisk Manager Flashing Crash Fix (Critical Hotfix)
+
+###  Major Changes
+- **Magisk Manager UI Force Close Fix**: Removed the `unzip` command from `customize.sh`. In modern Magisk mode, Magisk automatically extracts all files before running `customize.sh`. Re-executing `unzip` inside `customize.sh` was overwriting the running script itself, causing the shell interpreter to crash and force-close the Magisk Manager app at the very end of installation.
+- **Uninstallation Process Thawing**: Integrated `pkill -CONT` in `uninstall.sh` to automatically resume GMS, GSF, and Play Store processes if the module is uninstalled, ensuring they are unfrozen and active.
+
+---
+
 ## v2.6.5 – GSF Process Freezing & Multi-Component Monitoring (Hotfix Release)
 
 ###  Major Changes

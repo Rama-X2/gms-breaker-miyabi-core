@@ -11,13 +11,9 @@ ui_print "                     /l、                          "
 ui_print "                   (ﾟ､ ｡ 7                        "
 ui_print "                   l、 ~ヽ                        "
 ui_print "                   じしf_, )ノ                     "
-ui_print "     『 GMS Breaker Miyabi Core v2.6.5 』          "
+ui_print "     『 GMS Breaker Miyabi Core v2.6.6 』          "
 ui_print "=================================================="
 ui_print " - Target Environment: Universal (Magisk/KSU/APatch)"
-
-# Force-extract the entire ZIP file to ensure KSU/APatch/Magisk compatibility
-ui_print "- Extracting module files..."
-unzip -o "$ZIPFILE" -d "$MODPATH" 2>/dev/null
 
 # Remove skip_mount if it was automatically created by a previous failed install
 rm -f "$MODPATH/skip_mount"
