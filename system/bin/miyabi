@@ -49,8 +49,8 @@ case "$1" in
       echo "Breaker Status : ENABLED (GMS Isolated)"
     fi
     
-    # Check GMS process status (handles SIGSTOP states)
-    GMS_PIDS=$(pgrep -f com.google.android.gms)
+    # Check GMS/GSF/Vending process status (handles SIGSTOP states)
+    GMS_PIDS=$(pgrep -f com.google.android.gms; pgrep -f com.google.process.gservices; pgrep -f com.android.vending)
     if [ -z "$GMS_PIDS" ]; then
       echo "GMS Processes  : Suspended/Stopped"
     else

@@ -33,6 +33,16 @@ com.google.android.gms.policy_sidecar
 com.google.android.printservice.recommendation
 "
 
+# Define target processes to freeze (matches command line patterns)
+PROCESS_PATTERNS="
+com.google.android.gms
+com.google.process.gservices
+com.android.vending
+com.google.android.gsf
+com.google.android.apps.gcs
+com.google.android.projection.gearhead
+"
+
 # Helper to find all active Android users (Owner, Dual Apps, Work Profile, etc.)
 # Highly compatible implementation using standard grep and cut (avoids grep -oE)
 get_users() {
@@ -141,9 +151,13 @@ while true; do
           cmd appops reset --user "$U" "$P" >/dev/null 2>&1 || cmd appops reset "$P" >/dev/null 2>&1
         done
         
-        # Resume any frozen processes and re-whitelist in deviceidle
-        pkill -CONT -f "$P" >/dev/null 2>&1
+        # Re-whitelist in deviceidle
         cmd deviceidle whitelist +"$P" >/dev/null 2>&1
+      done
+      
+      # Resume all frozen Google/GSF/Store processes (SIGCONT)
+      for PROC in $PROCESS_PATTERNS; do
+        pkill -CONT -f "$PROC" >/dev/null 2>&1
       done
       
       CURRENT_STATE="disabled"
@@ -158,16 +172,19 @@ while true; do
     fi
   fi
 
-  # 1. Force-stop and freeze running instances of target packages (SIGSTOP)
-  # Uses SIGSTOP to freeze persistent services in the kernel to prevent OS auto-restarts.
+  # 1. Force-stop running packages
   for P in $TARGET_PACKAGES; do
-    if pgrep -f "$P" >/dev/null 2>&1; then
+    if pgrep -f "$P" >/dev/null 2>&1 || { [ "$P" = "com.google.android.gsf" ] && pgrep -f com.google.process.gservices >/dev/null 2>&1; }; then
       for U in $USER_IDS; do
         am force-stop --user "$U" "$P" >/dev/null 2>&1 || am force-stop "$P" >/dev/null 2>&1
         cmd package suspend --user "$U" "$P" >/dev/null 2>&1
       done
-      pkill -STOP -f "$P" >/dev/null 2>&1
     fi
+  done
+
+  # 2. Freeze Google/GSF/Store processes in the kernel (SIGSTOP) to prevent restarts
+  for PROC in $PROCESS_PATTERNS; do
+    pkill -STOP -f "$PROC" >/dev/null 2>&1
   done
 
   # 2. Enforce network blocks using pre-resolved UIDs (zero Java vm overhead!)

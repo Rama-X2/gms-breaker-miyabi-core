@@ -1,3 +1,11 @@
+## v2.6.5 – GSF Process Freezing & Multi-Component Monitoring (Hotfix Release)
+
+###  Major Changes
+- **GSF Process Name Freezing**: Added target process patterns (`PROCESS_PATTERNS`) in `service.sh` to capture and SIGSTOP/SIGCONT processes whose names don't match their package name, specifically targeting `com.google.process.gservices` (the Google Services Framework process).
+- **Multi-Component Status Parsing**: Expanded the CLI status dashboard to query GMS, GSF, and Google Play Store process states, ensuring that if any Google background component is active, the CLI reports it.
+
+---
+
 ## v2.6.4 – Kernel Process Freezing & English CLI Migration (Major Release)
 
 ###  Major Changes

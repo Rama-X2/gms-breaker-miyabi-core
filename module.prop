@@ -1,7 +1,7 @@
 id=gms-breaker-miyabi-core
 name=GMS Breaker Miyabi Core
-version=v2.6.4
-versionCode=264
+version=v2.6.5
+versionCode=265
 author=Rama-X2
 description=Universal Ultimate Extreme Runtime Kill for Google Services. Supporting all Android versions, chipsets, ROMs, and Magisk/KSU/APatch (Account Safe, Maximum Performance).
 updateJson=https://raw.githubusercontent.com/Rama-X2/gms-breaker-miyabi-core/main/update.json
