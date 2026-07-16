@@ -1,3 +1,19 @@
+## v2.7.1 – Active Zygisk Injection Deadlock Fix (Critical Hotfix Release)
+
+###  Major Changes
+- **Zygisk Injection Deadlock Fix**: Completely removed the loop-level `am force-stop` checks (running every 20 seconds) in `service.sh`. In Xiaomi devices, background system components constantly try to bind to GMS. This created a rapid spawn-kill loop where Zygisk (Magisk) was attempting to inject root hooks into the newly spawned GMS processes while our script was immediately killing them. This socket mismatch deadlocked the Zygisk/Magisk daemon and crashed Magisk Manager.
+- **Relocated Halting**: The `am force-stop` command has been moved to run only once during initialization (`initialize_gms_breaker`) on boot or state toggles. The background GMS packages remain completely silent and battery-neutral without loop-killing through AppOps restrictions, Restricted Standby buckets, and network firewall isolation.
+
+---
+
+## v2.7.0 – Binder Thread Exhaustion & Magisk Daemon Deadlock Fix (Stability Release)
+
+###  Major Changes
+- **Magisk Daemon Deadlock Fix**: Extended the post-boot settle delay in `service.sh` from 15 seconds to 60 seconds. During early boot, the system server is heavily busy spawning startup apps. Inundating the package manager and appops services with hundreds of root binder calls instantly causes binder thread exhaustion and deadlock, freezing the Magisk daemon and crashing Magisk Manager on launch.
+- **Paced Command Loops**: Introduced pacing delays (`sleep 0.1` and `sleep 0.2`) inside the package, user, and AppOps loops in `service.sh`. This distributes the binder calls over several seconds instead of executing them all in a millisecond, preventing thread exhaustion.
+
+---
+
 ## v2.6.9 – Magisk Manager Launch Force Close Fix (Ultimate Compatibility Release)
 
 ###  Major Changes

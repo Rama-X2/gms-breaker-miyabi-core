@@ -9,8 +9,8 @@ until [ "$(getprop sys.boot_completed)" = "1" ]; do
   sleep 5
 done
 
-# Wait for system services to settle
-sleep 15
+# Wait for system services to settle (longer sleep to prevent boot-time binder thread exhaustion)
+sleep 60
 
 # Reset CLI temporary flag on boot to ensure GMS Breaker is always active after a reboot (Self-Healing)
 rm -f /data/adb/miyabi_disabled
@@ -67,11 +67,14 @@ initialize_gms_breaker() {
   # Remove from deviceidle whitelist (globally)
   for P in $INSTALLED_PACKAGES; do
     cmd deviceidle whitelist -"$P" >/dev/null 2>&1
+    sleep 0.1
   done
 
   # Apply AppOps and Standby Bucket for all users
   for U in $USER_IDS; do
     for P in $INSTALLED_PACKAGES; do
+      # Force-stop the package so it halts
+      am force-stop --user "$U" "$P" >/dev/null 2>&1 || am force-stop "$P" >/dev/null 2>&1
       
       # Block critical AppOps that GMS uses to wake up and run background tasks
       for OP in RUN_IN_BACKGROUND RUN_ANY_IN_BACKGROUND WAKE_LOCK START_FOREGROUND ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION GET_USAGE_STATS SYSTEM_ALERT_WINDOW WRITE_SETTINGS; do
@@ -85,6 +88,7 @@ initialize_gms_breaker() {
         bucket="restricted"
       fi
       am set-standby-bucket --user "$U" "$P" "$bucket" >/dev/null 2>&1 || am set-standby-bucket "$P" "$bucket" >/dev/null 2>&1
+      sleep 0.2
     done
   done
 
@@ -102,6 +106,7 @@ initialize_gms_breaker() {
         ip6tables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null || ip6tables -I OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
       fi
     done
+    sleep 0.1
   done
 }
 
@@ -166,14 +171,7 @@ while true; do
     fi
   fi
 
-  # 1. Force-stop running packages
-  for P in $TARGET_PACKAGES; do
-    if pgrep -f "$P" >/dev/null 2>&1 || { [ "$P" = "com.google.android.gsf" ] && pgrep -f com.google.process.gservices >/dev/null 2>&1; }; then
-      for U in $USER_IDS; do
-        am force-stop --user "$U" "$P" >/dev/null 2>&1 || am force-stop "$P" >/dev/null 2>&1
-      done
-    fi
-  done
+
 
 
 
