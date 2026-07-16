@@ -1,3 +1,12 @@
+## v2.6.4 – Kernel Process Freezing & English CLI Migration (Major Release)
+
+###  Major Changes
+- **Kernel-Level SIGSTOP/SIGCONT Freezing**: Integrated kernel-level process suspension (`pkill -STOP` and `pkill -CONT`) in `service.sh`. This suspends GMS persistent system processes directly in the kernel, leaving them in the Stopped state (T). This blocks 100% of background activities and prevents the OS from continuously restarting them.
+- **English CLI Translation**: Fully translated the `miyabi` command-line utility messages, usage instructions, error prompts, and status dashboards into English for global compatibility.
+- **Native Process State Parsing**: Re-coded the GMS process status checker in the CLI to read `/proc/$pid/stat` directly in the shell (zero VM overhead), correctly reporting if GMS processes are running or suspended in the kernel.
+
+---
+
 ## v2.6.3 – Legacy Template Unified Migration (Critical Flashing Fix)
 
 ###  Major Changes

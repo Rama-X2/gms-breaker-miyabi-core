@@ -141,7 +141,8 @@ while true; do
           cmd appops reset --user "$U" "$P" >/dev/null 2>&1 || cmd appops reset "$P" >/dev/null 2>&1
         done
         
-        # Re-whitelist in deviceidle
+        # Resume any frozen processes and re-whitelist in deviceidle
+        pkill -CONT -f "$P" >/dev/null 2>&1
         cmd deviceidle whitelist +"$P" >/dev/null 2>&1
       done
       
@@ -157,14 +158,15 @@ while true; do
     fi
   fi
 
-  # 1. Force-stop running instances of target packages (stops persistent services cleanly)
-  # Uses TARGET_PACKAGES to handle boot-time package manager ready race conditions
+  # 1. Force-stop and freeze running instances of target packages (SIGSTOP)
+  # Uses SIGSTOP to freeze persistent services in the kernel to prevent OS auto-restarts.
   for P in $TARGET_PACKAGES; do
     if pgrep -f "$P" >/dev/null 2>&1; then
       for U in $USER_IDS; do
         am force-stop --user "$U" "$P" >/dev/null 2>&1 || am force-stop "$P" >/dev/null 2>&1
         cmd package suspend --user "$U" "$P" >/dev/null 2>&1
       done
+      pkill -STOP -f "$P" >/dev/null 2>&1
     fi
   done
 
