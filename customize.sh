@@ -3,6 +3,18 @@
 # Copyright (C) 2026 Rama-X2
 # Licensed under the GNU General Public License, Version 3.0
 
+# Print banner
+ui_print "=================================================="
+ui_print "                     (≧◡≦)                       "
+ui_print "                  Miyabi Core                     "
+ui_print "                     /l、                          "
+ui_print "                   (ﾟ､ ｡ 7                        "
+ui_print "                   l、 ~ヽ                        "
+ui_print "                   じしf_, )ノ                     "
+ui_print "     『 GMS Breaker Miyabi Core v2.6.3 』          "
+ui_print "=================================================="
+ui_print " - Target Environment: Universal (Magisk/KSU/APatch)"
+
 # Force-extract the entire ZIP file to ensure KSU/APatch/Magisk compatibility
 ui_print "- Extracting module files..."
 unzip -o "$ZIPFILE" -d "$MODPATH" 2>/dev/null
@@ -53,3 +65,6 @@ if [ -d "/data/adb/apatch/bin" ]; then
   chmod 0755 /data/adb/apatch/bin/miyabi 2>/dev/null
   restorecon /data/adb/apatch/bin/miyabi 2>/dev/null
 fi
+
+ui_print "==================『 REBOOT DEVICE 』=================="
+ui_print " "

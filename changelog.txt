@@ -1,3 +1,11 @@
+## v2.6.3 – Legacy Template Unified Migration (Critical Flashing Fix)
+
+###  Major Changes
+- **Legacy install.sh Removal**: Completely deleted `install.sh` from the module zip. In Magisk, the presence of `install.sh` triggers a legacy installation mode fallback that ignores `customize.sh` entirely, causing file extraction and permission tasks to be bypassed.
+- **Unified customize.sh Engine**: Migrated the ASCII banner print and initialization logs directly into `customize.sh`. This ensures a single, modern, and unified installation engine that runs identically on Magisk, KernelSU, and APatch.
+
+---
+
 ## v2.6.2 – Installation & Extraction Enforcement Hotfix (Critical Fix)
 
 ###  Major Changes
@@ -8,7 +16,7 @@
 
 ## v2.6.1 – CLI & Execution Protection Hotfix (Line Endings & Permission Safety)
 
-###  Major Changes
+### 🚀 Major Changes
 - **Auto Windows EOL (CRLF) Cleanup**: Added dynamic carriage return removal (`tr -d '\r'`) at the very beginning of both `customize.sh` and `install.sh` (`set_permissions`). This automatically fixes the `inaccessible or not found` error caused by Windows line endings conversion (CRLF) on Git checkouts.
 - **Git Line Endings Enforcement**: Added a `.gitattributes` file to enforce LF line endings on Git checkouts for shell scripts and CLI tools.
 - **Magisk Permissions Pipeline Fallback**: Integrated the `set_permissions` function inside `install.sh` to guarantee that Magisk sets execution rights `0755` on all script files during the official permission phase.
