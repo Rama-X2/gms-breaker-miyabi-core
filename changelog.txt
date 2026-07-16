@@ -1,4 +1,12 @@
-『 GMS Breaker Miyabi Core v2.5.0 』
+## v2.6.0 – SELinux Fixes & Persistent Process Halting (Critical Update)
+
+### Major Changes
+- **Persistent Process Halt Fix**: Replaced native `pkill -9` in the background loop with the official Android lifecycle **`am force-stop`** command. This tells the OS to stop GMS and suspend all its tasks cleanly, solving the issue where GMS's persistent system processes were immediately restarted by the OS.
+- **SELinux Context Restoration**: Added explicit `restorecon -R` execution in `customize.sh` for all script binaries. This sets the proper system security label (`u:object_r:system_file:s0`), resolving terminal execution errors (`inaccessible or not found`) on Android 13/14/15.
+- **Physical Copy Fallback (KSU & APatch)**: Modified `customize.sh` to copy the `miyabi` binary directly to `/data/adb/ksu/bin` and `/data/adb/apatch/bin` (instead of symlinking) to make it independent and fully accessible in all shells.
+- **Auto Nested ZIP Correction**: Re-implemented the automatic directory flattening script to automatically correct ZIP structure errors if users compress the parent folder.
+
+---
 
 ## v2.5.0 – CLI Path Fallback & Package Expansion (Ultimate Stability)
 

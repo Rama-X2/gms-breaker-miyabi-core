@@ -8,7 +8,7 @@ Built for users who prioritize **maximum gaming consistency, lower thermal throt
 
 ---
 
-## Key Upgrades in v2.5.0
+## 🚀 Key Upgrades in v2.6.0
 
 ### 100% Universal Root Compatibility
 - Works out-of-the-box on **Magisk**, **KernelSU**, and **APatch**.
@@ -83,7 +83,7 @@ The module dynamically isolates the following packages if they are installed:
 
 ## Miyabi CLI (Dynamic Live Toggle)
 
-GMS Breaker Miyabi Core v2.5.0 features a command-line terminal utility to control the GMS blocking status in real-time **without needing a device reboot**. You can run these commands from any terminal emulator (such as Termux) with root access.
+GMS Breaker Miyabi Core v2.6.0 features a command-line terminal utility to control the GMS blocking status in real-time **without needing a device reboot**. You can run these commands from any terminal emulator (such as Termux) with root access.
 
 ### Terminal Commands:
 * **Temporarily Disable GMS Breaker** (Activate GMS for Google Maps/GPS location tracking, ride-hailing apps, Play Store downloads, or contact sync):
