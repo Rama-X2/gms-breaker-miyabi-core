@@ -1,3 +1,15 @@
+『 GMS Breaker Miyabi Core v2.6.1 』
+
+## v2.6.1 – CLI & Execution Protection Hotfix (Line Endings & Permission Safety)
+
+### 🚀 Major Changes
+- **Auto Windows EOL (CRLF) Cleanup**: Added dynamic carriage return removal (`tr -d '\r'`) at the very beginning of both `customize.sh` and `install.sh` (`set_permissions`). This automatically fixes the `inaccessible or not found` error caused by Windows line endings conversion (CRLF) on Git checkouts.
+- **Git Line Endings Enforcement**: Added a `.gitattributes` file to enforce LF line endings on Git checkouts for shell scripts and CLI tools.
+- **Magisk Permissions Pipeline Fallback**: Integrated the `set_permissions` function inside `install.sh` to guarantee that Magisk sets execution rights `0755` on all script files during the official permission phase.
+- **ZIP Helper Script**: Added a `zip_module.bat` Windows utility script to allow direct zipping of the module contents in the correct structure with a single double-click.
+
+---
+
 ## v2.6.0 – SELinux Fixes & Persistent Process Halting (Critical Update)
 
 ### Major Changes
