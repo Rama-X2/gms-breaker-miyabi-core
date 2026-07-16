@@ -157,13 +157,12 @@ while true; do
     fi
   fi
 
-  # 1. Kill any running instances of target packages (highly efficient native pkill)
+  # 1. Force-stop running instances of target packages (stops persistent services cleanly)
   # Uses TARGET_PACKAGES to handle boot-time package manager ready race conditions
   for P in $TARGET_PACKAGES; do
     if pgrep -f "$P" >/dev/null 2>&1; then
-      pkill -9 -f "$P"
-      # Re-suspend immediately in case they were unsuspended by a system event
       for U in $USER_IDS; do
+        am force-stop --user "$U" "$P" >/dev/null 2>&1 || am force-stop "$P" >/dev/null 2>&1
         cmd package suspend --user "$U" "$P" >/dev/null 2>&1
       done
     fi

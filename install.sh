@@ -25,7 +25,7 @@ print_modname() {
   ui_print "                     l、  ~ヽ                        "
   ui_print "                     じしf_, )ノ                     "
   sleep 0.5
-  ui_print "     『 GMS Breaker Miyabi Core v2.5.0 』          "
+  ui_print "     『 GMS Breaker Miyabi Core v2.6.0 』          "
   sleep 0.5
   ui_print "⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀⢀"
   sleep 0.5
