@@ -8,7 +8,7 @@ Built for users who prioritize **maximum gaming consistency, lower thermal throt
 
 ---
 
-## 🚀 Key Upgrades in v2.6.0
+##  Key Upgrades in v2.6.0
 
 ### 100% Universal Root Compatibility
 - Works out-of-the-box on **Magisk**, **KernelSU**, and **APatch**.
