@@ -1,3 +1,18 @@
+## v2.6.9 – Magisk Manager Launch Force Close Fix (Ultimate Compatibility Release)
+
+###  Major Changes
+- **Magisk Manager UI Force Close Fix**: Completely removed the `cmd package suspend` and `cmd package unsuspend` commands from GMS packages in `service.sh` and `uninstall.sh`. Magisk Manager automatically queries package information for all packages on the device to populate its zygote and DenyList home screens. If critical Google Play Services packages are in a suspended state, Magisk Manager's internal package scanner throws unhandled exceptions and force-closes on launch. Removing the suspension resolves the crash permanently.
+- **Maintained GMS Inactivity**: GMS remains completely restricted and inactive (0% CPU/battery usage) through `am force-stop` process-killing, targeted AppOps blocklists, App Standby restricted bucket enforcement, and network firewall isolation.
+
+---
+
+## v2.6.8 – Third-Party App Permissions Reset Fix (Critical Hotfix Release)
+
+###  Major Changes
+- **Third-Party App Permissions Reset Fix**: Removed the nuclear `cmd appops reset` command from `service.sh` and `uninstall.sh`. On Xiaomi devices (MIUI/HyperOS), the `reset` command has a system-level bug that falls back to resetting permissions globally for ALL third-party apps (causing apps like ZArchiver to lose storage permission) if the argument package fails or under high system load. Replaced it with an explicit, targeted `cmd appops set ... allow` loop that only affects the specific Google packages, keeping all third-party app permissions completely safe.
+
+---
+
 ## v2.6.7 – Magisk Manager App Startup Freeze Fix (Critical Stability Release)
 
 ###  Major Changes

@@ -69,11 +69,9 @@ initialize_gms_breaker() {
     cmd deviceidle whitelist -"$P" >/dev/null 2>&1
   done
 
-  # Apply AppOps, Standby Bucket, and Suspend for all users
+  # Apply AppOps and Standby Bucket for all users
   for U in $USER_IDS; do
     for P in $INSTALLED_PACKAGES; do
-      # Suspend the package so it cannot run normally
-      cmd package suspend --user "$U" "$P" >/dev/null 2>&1
       
       # Block critical AppOps that GMS uses to wake up and run background tasks
       for OP in RUN_IN_BACKGROUND RUN_ANY_IN_BACKGROUND WAKE_LOCK START_FOREGROUND ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION GET_USAGE_STATS SYSTEM_ALERT_WINDOW WRITE_SETTINGS; do
@@ -145,10 +143,11 @@ while true; do
           fi
         done
         
-        # Unsuspend and reset AppOps
+        # Restore AppOps
         for U in $USER_IDS; do
-          cmd package unsuspend --user "$U" "$P" >/dev/null 2>&1 || cmd package unsuspend "$P" >/dev/null 2>&1
-          cmd appops reset --user "$U" "$P" >/dev/null 2>&1 || cmd appops reset "$P" >/dev/null 2>&1
+          for OP in RUN_IN_BACKGROUND RUN_ANY_IN_BACKGROUND WAKE_LOCK START_FOREGROUND ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION GET_USAGE_STATS SYSTEM_ALERT_WINDOW WRITE_SETTINGS; do
+            cmd appops set --user "$U" "$P" "$OP" allow >/dev/null 2>&1 || cmd appops set "$P" "$OP" allow >/dev/null 2>&1
+          done
         done
         
         # Re-whitelist in deviceidle
@@ -172,7 +171,6 @@ while true; do
     if pgrep -f "$P" >/dev/null 2>&1 || { [ "$P" = "com.google.android.gsf" ] && pgrep -f com.google.process.gservices >/dev/null 2>&1; }; then
       for U in $USER_IDS; do
         am force-stop --user "$U" "$P" >/dev/null 2>&1 || am force-stop "$P" >/dev/null 2>&1
-        cmd package suspend --user "$U" "$P" >/dev/null 2>&1
       done
     fi
   done
