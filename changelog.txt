@@ -1,6 +1,31 @@
+## v3.0.0 – Major Architecture Update (WebUI, Action Button, 3 Smart Modes & nftables)
+
+### Major Changes
+- **Built-in WebUI (`webroot/index.html`)**: Offline graphical dashboard for KernelSU, KernelSU-Next, APatch, MMRL, and WebUI-X with Indigo theme, Auto/Light/Dark mode (follows system setting by default), live GMS RAM & process telemetry, profile switching, per-package exclusions, diagnostics, and logs.
+- **1-Tap Action Button (`action.sh`)**: Native support for the Magisk 28+, KernelSU, and APatch module Action button to toggle GMS isolation ON/OFF immediately without opening a terminal.
+- **3 Live-Switchable Profiles**:
+  - `doze` (Smart Doze): Daily-driver deep sleep optimization while keeping FCM push notifications, Play Store, and Google login functional.
+  - `balanced` (Hybrid): Restricts background CPU, wakelocks, and eBPF background data (`cmd netpolicy`) while keeping foreground apps responsive.
+  - `extreme` (Max Gaming): Full IPv4/IPv6 firewall isolation, strict AppOps, and Screen-Off deep Doze.
+- **Triple-Layer Firewall Engine**: Prioritizes native `nftables` (`inet miyabi_core` + `meta skuid`) on Android 14/15/16 kernels, falls back to a dedicated `MIYABI_BLOCK` `iptables`/`ip6tables` custom chain with `-w` lock safety (zero conflict with Clash, VPNs, AdAway, or AFWall+), and pairs with Android eBPF `cmd netpolicy`.
+- **Multi-Partition Sysconfig XML Doze Patcher**: Scans `/system`, `/product`, `/system_ext`, and `/vendor` during installation to systemlessly remove hardcoded `com.google.android.gms` power-save whitelists, with XML validation, module conflict detection, and dirty re-flash preservation.
+- **Screen-Off Smart Doze**: `service.sh` checks display power and charging state (`is_screen_off && !is_charging`) before triggering deep idle, avoiding mid-game ping spikes and screen-on stutters.
+- **Unified Core Engine (`core.sh`)**: Instant CLI/Action/WebUI execution with atomic `mkdir` locking, `/data/system/packages.list` UID lookup, portable millisecond sleep pacing, live `module.prop` description updates, and log rotation.
+- **Expanded CLI (`miyabi`)**: Added `toggle`, `mode <doze|balanced|extreme>`, `gaming`, `clean`, `exclude <pkg>`, `include <pkg>`, `config [key val]`, `doctor`, `log [clear]`, and `json`.
+- **Reversible Telemetry Component Mute**: Optionally disables telemetry-only GMS components (Analytics, Measurement, Ads ID, Stats/UsageReporting) while keeping Chimera core, OAuth, FCM, and Play Integrity untouched.
+- **Recovery Support (`META-INF`)**: Added standard `META-INF/com/google/android/update-binary` and `updater-script` for TWRP/OrangeFox compatibility.
+
+### Fixes & Improvements
+- **Removed 5-Minute Full Re-Apply Loop**: Replaced the heavy 5-minute `initialize_gms_breaker` cycle in `service.sh` with a lightweight 60-second firewall integrity guard and screen-off Doze check.
+- **Complete Uninstaller**: Updated `uninstall.sh` to restore `standby-bucket` to `active`, remove `nftables` tables and `MIYABI_BLOCK` chains, clear `netpolicy` blacklists, re-enable telemetry components, and clean `/data/adb/miyabi_core`.
+- **Strict Unix LF Enforcement**: Normalized all scripts, configs, and metadata files to LF line endings without BOM.
+- **Updated README**: Rewrote `README.md` to accurately document v3.0.0 architecture and commands.
+
+---
+
 ## v2.7.1 – Active Zygisk Injection Deadlock Fix (Critical Hotfix Release)
 
-###  Major Changes
+### Major Changes
 - **Zygisk Injection Deadlock Fix**: Completely removed the loop-level `am force-stop` checks (running every 20 seconds) in `service.sh`. In Xiaomi devices, background system components constantly try to bind to GMS. This created a rapid spawn-kill loop where Zygisk (Magisk) was attempting to inject root hooks into the newly spawned GMS processes while our script was immediately killing them. This socket mismatch deadlocked the Zygisk/Magisk daemon and crashed Magisk Manager.
 - **Relocated Halting**: The `am force-stop` command has been moved to run only once during initialization (`initialize_gms_breaker`) on boot or state toggles. The background GMS packages remain completely silent and battery-neutral without loop-killing through AppOps restrictions, Restricted Standby buckets, and network firewall isolation.
 
@@ -8,7 +33,7 @@
 
 ## v2.7.0 – Binder Thread Exhaustion & Magisk Daemon Deadlock Fix (Stability Release)
 
-###  Major Changes
+### Major Changes
 - **Magisk Daemon Deadlock Fix**: Extended the post-boot settle delay in `service.sh` from 15 seconds to 60 seconds. During early boot, the system server is heavily busy spawning startup apps. Inundating the package manager and appops services with hundreds of root binder calls instantly causes binder thread exhaustion and deadlock, freezing the Magisk daemon and crashing Magisk Manager on launch.
 - **Paced Command Loops**: Introduced pacing delays (`sleep 0.1` and `sleep 0.2`) inside the package, user, and AppOps loops in `service.sh`. This distributes the binder calls over several seconds instead of executing them all in a millisecond, preventing thread exhaustion.
 
@@ -16,7 +41,7 @@
 
 ## v2.6.9 – Magisk Manager Launch Force Close Fix (Ultimate Compatibility Release)
 
-###  Major Changes
+### Major Changes
 - **Magisk Manager UI Force Close Fix**: Completely removed the `cmd package suspend` and `cmd package unsuspend` commands from GMS packages in `service.sh` and `uninstall.sh`. Magisk Manager automatically queries package information for all packages on the device to populate its zygote and DenyList home screens. If critical Google Play Services packages are in a suspended state, Magisk Manager's internal package scanner throws unhandled exceptions and force-closes on launch. Removing the suspension resolves the crash permanently.
 - **Maintained GMS Inactivity**: GMS remains completely restricted and inactive (0% CPU/battery usage) through `am force-stop` process-killing, targeted AppOps blocklists, App Standby restricted bucket enforcement, and network firewall isolation.
 
@@ -24,14 +49,14 @@
 
 ## v2.6.8 – Third-Party App Permissions Reset Fix (Critical Hotfix Release)
 
-###  Major Changes
+### Major Changes
 - **Third-Party App Permissions Reset Fix**: Removed the nuclear `cmd appops reset` command from `service.sh` and `uninstall.sh`. On Xiaomi devices (MIUI/HyperOS), the `reset` command has a system-level bug that falls back to resetting permissions globally for ALL third-party apps (causing apps like ZArchiver to lose storage permission) if the argument package fails or under high system load. Replaced it with an explicit, targeted `cmd appops set ... allow` loop that only affects the specific Google packages, keeping all third-party app permissions completely safe.
 
 ---
 
 ## v2.6.7 – Magisk Manager App Startup Freeze Fix (Critical Stability Release)
 
-###  Major Changes
+### Major Changes
 - **Magisk Manager App Startup Freeze Fix**: Removed the `pkill -STOP` and `pkill -CONT` kernel-level process suspension commands. Freezing GMS at the kernel level caused synchronous IPC/Binder calls from client apps (like Magisk Manager checking SafetyNet status on launch) to hang indefinitely in the kernel binder driver, crashing the calling apps. Returning to pure `am force-stop` and `cmd package suspend` ensures binder transactions fail fast instead of blocking.
 - **Uninstallation Cleaning**: Re-cleaned `uninstall.sh` and simplified the CLI process check to match.
 
@@ -39,7 +64,7 @@
 
 ## v2.6.6 – Magisk Manager Flashing Crash Fix (Critical Hotfix)
 
-###  Major Changes
+### Major Changes
 - **Magisk Manager UI Force Close Fix**: Removed the `unzip` command from `customize.sh`. In modern Magisk mode, Magisk automatically extracts all files before running `customize.sh`. Re-executing `unzip` inside `customize.sh` was overwriting the running script itself, causing the shell interpreter to crash and force-close the Magisk Manager app at the very end of installation.
 - **Uninstallation Process Thawing**: Integrated `pkill -CONT` in `uninstall.sh` to automatically resume GMS, GSF, and Play Store processes if the module is uninstalled, ensuring they are unfrozen and active.
 
@@ -47,7 +72,7 @@
 
 ## v2.6.5 – GSF Process Freezing & Multi-Component Monitoring (Hotfix Release)
 
-###  Major Changes
+### Major Changes
 - **GSF Process Name Freezing**: Added target process patterns (`PROCESS_PATTERNS`) in `service.sh` to capture and SIGSTOP/SIGCONT processes whose names don't match their package name, specifically targeting `com.google.process.gservices` (the Google Services Framework process).
 - **Multi-Component Status Parsing**: Expanded the CLI status dashboard to query GMS, GSF, and Google Play Store process states, ensuring that if any Google background component is active, the CLI reports it.
 
@@ -55,7 +80,7 @@
 
 ## v2.6.4 – Kernel Process Freezing & English CLI Migration (Major Release)
 
-###  Major Changes
+### Major Changes
 - **Kernel-Level SIGSTOP/SIGCONT Freezing**: Integrated kernel-level process suspension (`pkill -STOP` and `pkill -CONT`) in `service.sh`. This suspends GMS persistent system processes directly in the kernel, leaving them in the Stopped state (T). This blocks 100% of background activities and prevents the OS from continuously restarting them.
 - **English CLI Translation**: Fully translated the `miyabi` command-line utility messages, usage instructions, error prompts, and status dashboards into English for global compatibility.
 - **Native Process State Parsing**: Re-coded the GMS process status checker in the CLI to read `/proc/$pid/stat` directly in the shell (zero VM overhead), correctly reporting if GMS processes are running or suspended in the kernel.
@@ -64,7 +89,7 @@
 
 ## v2.6.3 – Legacy Template Unified Migration (Critical Flashing Fix)
 
-###  Major Changes
+### Major Changes
 - **Legacy install.sh Removal**: Completely deleted `install.sh` from the module zip. In Magisk, the presence of `install.sh` triggers a legacy installation mode fallback that ignores `customize.sh` entirely, causing file extraction and permission tasks to be bypassed.
 - **Unified customize.sh Engine**: Migrated the ASCII banner print and initialization logs directly into `customize.sh`. This ensures a single, modern, and unified installation engine that runs identically on Magisk, KernelSU, and APatch.
 
@@ -72,7 +97,7 @@
 
 ## v2.6.2 – Installation & Extraction Enforcement Hotfix (Critical Fix)
 
-###  Major Changes
+### Major Changes
 - **Enforced File Extraction**: Added explicit `unzip -o "$ZIPFILE"` extraction commands directly inside `customize.sh`. This ensures that even if custom recoveries, alternative root managers, or specific installer templates skip extracting the `system` folder or `service.sh`, they are force-extracted during installation.
 - **skip_mount Cleanup**: Programmed automatic deletion of any legacy or system-generated `skip_mount` flag file in the module folder during installation to prevent mounting skips.
 
@@ -80,7 +105,7 @@
 
 ## v2.6.1 – CLI & Execution Protection Hotfix (Line Endings & Permission Safety)
 
-### 🚀 Major Changes
+### Major Changes
 - **Auto Windows EOL (CRLF) Cleanup**: Added dynamic carriage return removal (`tr -d '\r'`) at the very beginning of both `customize.sh` and `install.sh` (`set_permissions`). This automatically fixes the `inaccessible or not found` error caused by Windows line endings conversion (CRLF) on Git checkouts.
 - **Git Line Endings Enforcement**: Added a `.gitattributes` file to enforce LF line endings on Git checkouts for shell scripts and CLI tools.
 - **Magisk Permissions Pipeline Fallback**: Integrated the `set_permissions` function inside `install.sh` to guarantee that Magisk sets execution rights `0755` on all script files during the official permission phase.
@@ -113,12 +138,8 @@
 ### Major Changes
 - **Miyabi CLI Permissions Fix**: Added `customize.sh` script to automatically set `0755` executable permissions for the CLI script (`/system/bin/miyabi`), resolving the issue where root terminals returned "not found" or "permission denied" on APatch/KernelSU/Magisk.
 - **Robust CLI Argument Parsing**: Simplified CLI argument checks to prevent KornShell syntax parser errors in older system shells.
-- **Terminal Root Verification**: Added root checks (`[ "$(id -u)" -ne 0 ]`) to the `miyabi` script to output a clear error message in Indonesian if executed without root privileges.
-- **Dynamic Uninstaller Delay**: Refactored `uninstall.sh` to run in a background subshell that waits for `sys.boot_completed=1` and stabilizes for 10 seconds. This guarantees GMS packages are successfully unsuspended and firewall rules are deleted cleanly when the module is removed.
-
-### Bug Fixes & Optimizations
-- **Bulletproof UID Resolution**: Replaced the package list cut/grep parsing logic in `service.sh` and `uninstall.sh` with a highly robust regex parser (`grep -oE "uid:[0-9,]+"`) to eliminate whitespace parsing differences in custom ROMs.
-
+- **Terminal Root Verification**: Added root checks (`[ "$(id -u)" -ne 0 ]`) to the `miyabi` script to output a clear error message if executed without root privileges.
+- **Dynamic Uninstaller Delay**: Refactored `uninstall.sh` to run in a background subshell that waits for `sys.boot_completed=1` and stabilizes for 10 seconds.
 
 ---
 
@@ -128,59 +149,12 @@
 - **Universal Root Support**: Fully compatible with Magisk, KernelSU, and APatch out-of-the-box.
 - **Multi-User & Parallel Space Support**: Automatically scans and isolates GMS in Dual Apps, Work Profiles, Secure Folder, and sandbox profiles.
 - **IPv4 + IPv6 Network Isolation**: Added full ip6tables support alongside iptables to prevent GMS background sync over IPv6.
-- **Engine Overhaul (Zero-CPU Loop)**: Caches user lists and firewall UIDs on boot. Spawns C-level native `pgrep`/`pkill` checks instead of heavy Java VM commands in the loop.
 - **App Standby Bucket Restriction**: Forces Google packages to the `restricted` (Android 12+) or `rare` (Android < 12) system bucket.
-- **Miyabi CLI Tool (`miyabi`)**: Added a terminal control utility allowing users to dynamically turn the breaker ON/OFF (`su -c miyabi on/off`) or check status in Termux instantly without rebooting.
-- **Dynamic Uninstallation**: Dynamically resolves package UIDs on uninstall to completely clean all firewall rules, reset AppOps, and unsuspend packages for all users.
-
-### Bug Fixes & Optimizations
-- **Solved Firewall Leak**: Implemented rule existence checks (`-C` check) before adding, preventing network lag and memory leaks.
-- **Removed Shell Execution Bugs**: Cleaned dynamic shell output using `tr -d '\r'` to prevent hidden carriage return errors.
-- **Cleaned Boot Script**: Emptied post-fs-data.sh since early-boot service commands fail before services start. Moved all logic to post-boot service.sh.
-- **Optimized Force-Idle**: Adjusted doze cycles to 120 seconds to be more battery-friendly.
+- **Miyabi CLI Tool (`miyabi`)**: Added a terminal control utility allowing users to dynamically turn the breaker ON/OFF without rebooting.
 
 ---
 
 ## v1.0.0 – GMS Breaker Miyabi Core v1.0.0 (Account Safe Edition)
 
 ### Major Changes
-- Rebuilt runtime engine for Android 11–15
-- Full suspend-based Google Services isolation
-- AppOps hard-block for wakelock, run_in_background, boot, alarms
-- UID-level network isolation using iptables (owner match)
-- Force Device Idle integration (deep doze trigger)
-- Removed Google whitelist entries automatically
-- No Google account removal (Account Safe mode)
-
-### Performance Improvements
-- Reduced Google Play Services CPU wake cycles
-- Eliminated background telemetry scheduling
-- Prevented Play Store auto wake
-- Blocked silent network sync from GMSCore
-- Improved idle state stability on MIUI
-
-### Battery Optimization
-- Aggressive wakelock denial
-- Alarm manager restriction
-- Background execution denial
-- Doze enforcement
-
-### Stability Improvements
-- Safe for Android 11–15
-- Compatible with MIUI & SuperiorOS
-- Universal AOSP fallback
-- No system.prop modification (clean implementation)
-- Minimal sepolicy rules (no permissive mode)
-
-### Removed
-- No package removal
-- No account wipe
-- No persistent system modification
-
----
-
-## Known Behavior
-- Push notifications will not work
-- Google-dependent apps may fail
-- Play Store background sync disabled
-- Intended for gaming / offline performance mode
+- Initial runtime engine for Android 11–15 with account-safe GMS isolation, AppOps restrictions, UID firewall rules, and device idle integration.

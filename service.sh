@@ -1,199 +1,82 @@
 #!/system/bin/sh
+# ==============================================================================
+# GMS Breaker Miyabi Core v3.0.0 - Watchdog Daemon
 # Copyright (C) 2026 Rama-X2
 # Licensed under the GNU General Public License, Version 3.0
 # Source: https://github.com/Rama-X2/gms-breaker-miyabi-core
+# ==============================================================================
+
+MODDIR="${0%/*}"
+export MODDIR
 
 (
-# Wait for boot completion
-until [ "$(getprop sys.boot_completed)" = "1" ]; do
-  sleep 5
-done
+  # Wait for Android boot completion
+  until [ "$(getprop sys.boot_completed)" = "1" ]; do
+    sleep 5
+  done
 
-# Wait for system services to settle (longer sleep to prevent boot-time binder thread exhaustion)
-sleep 60
-
-# Reset CLI temporary flag on boot to ensure GMS Breaker is always active after a reboot (Self-Healing)
-rm -f /data/adb/miyabi_disabled
-
-# Define target packages to isolate
-TARGET_PACKAGES="
-com.google.android.gms
-com.google.android.gsf
-com.android.vending
-com.google.android.gms.setup
-com.google.android.feedback
-com.google.android.partnersetup
-com.google.android.onetimeinitializer
-com.google.android.backuptransport
-com.google.android.syncadapters.contacts
-com.google.android.syncadapters.calendar
-com.google.android.projection.gearhead
-com.google.android.apps.gcs
-com.google.android.gms.policy_sidecar
-com.google.android.printservice.recommendation
-"
-
-# Define target processes to freeze (matches command line patterns)
-PROCESS_PATTERNS="
-com.google.android.gms
-com.google.process.gservices
-com.android.vending
-com.google.android.gsf
-com.google.android.apps.gcs
-com.google.android.projection.gearhead
-"
-
-# Helper to find all active Android users (Owner, Dual Apps, Work Profile, etc.)
-# Highly compatible implementation using standard grep and cut (avoids grep -oE)
-get_users() {
-  pm list users 2>/dev/null | grep "UserInfo{" | cut -d'{' -f2 | cut -d':' -f1
-}
-
-# Function to run the full block and isolation setup
-initialize_gms_breaker() {
-  USER_IDS=$(get_users)
-  if [ -z "$USER_IDS" ]; then
-    USER_IDS="0"
+  # Load core runtime library
+  if [ ! -f "$MODDIR/core.sh" ]; then
+    exit 1
   fi
+  # shellcheck disable=SC1091
+  . "$MODDIR/core.sh"
 
-  # Filter only installed packages to avoid throwing errors on non-existent ones
-  INSTALLED_PACKAGES=""
-  for P in $TARGET_PACKAGES; do
-    if pm path "$P" >/dev/null 2>&1; then
-      INSTALLED_PACKAGES="$INSTALLED_PACKAGES $P"
-    fi
-  done
+  ensure_state_dir
+  load_config
 
-  # Remove from deviceidle whitelist (globally)
-  for P in $INSTALLED_PACKAGES; do
-    cmd deviceidle whitelist -"$P" >/dev/null 2>&1
-    sleep 0.1
-  done
-
-  # Apply AppOps and Standby Bucket for all users
-  for U in $USER_IDS; do
-    for P in $INSTALLED_PACKAGES; do
-      # Force-stop the package so it halts
-      am force-stop --user "$U" "$P" >/dev/null 2>&1 || am force-stop "$P" >/dev/null 2>&1
-      
-      # Block critical AppOps that GMS uses to wake up and run background tasks
-      for OP in RUN_IN_BACKGROUND RUN_ANY_IN_BACKGROUND WAKE_LOCK START_FOREGROUND ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION GET_USAGE_STATS SYSTEM_ALERT_WINDOW WRITE_SETTINGS; do
-        cmd appops set --user "$U" "$P" "$OP" ignore >/dev/null 2>&1 || cmd appops set "$P" "$OP" ignore >/dev/null 2>&1
-      done
-      
-      # Restrict standby bucket (restricted for Android 12+, rare for older versions)
-      sdk=$(getprop ro.build.version.sdk)
-      bucket="rare"
-      if [ -n "$sdk" ] && [ "$sdk" -ge 31 ] 2>/dev/null; then
-        bucket="restricted"
-      fi
-      am set-standby-bucket --user "$U" "$P" "$bucket" >/dev/null 2>&1 || am set-standby-bucket "$P" "$bucket" >/dev/null 2>&1
-      sleep 0.2
-    done
-  done
-
-  # Network Isolation: Block IPv4 and IPv6 traffic for all target UIDs (all users)
-  # Caches the UIDs globally to prevent Java VM execution inside the 20-second loop
-  BLOCKED_UIDS=""
-  for P in $INSTALLED_PACKAGES; do
-    uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P($|[[:space:]])" | grep -oE "uid:[0-9,]+" | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
-    for UID in $uids; do
-      if [ -n "$UID" ]; then
-        BLOCKED_UIDS="$BLOCKED_UIDS $UID"
-        # Block IPv4 - check first to avoid duplicate rule stacking leak
-        iptables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null || iptables -I OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
-        # Block IPv6 - check first to avoid duplicate rule stacking leak
-        ip6tables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null || ip6tables -I OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
-      fi
-    done
-    sleep 0.1
-  done
-}
-
-# State tracking for live toggles
-CURRENT_STATE="active"
-
-# Run the initial deep isolation setup if enabled on boot
-if [ ! -f "/data/adb/miyabi_disabled" ]; then
-  initialize_gms_breaker
-else
-  CURRENT_STATE="disabled"
-fi
-
-# Counter for periodic deep checks (every 5 minutes / 300 seconds)
-DEEP_CHECK_INTERVAL=15
-COUNTER=0
-
-while true; do
-  # Check if breaker is temporarily disabled via CLI
-  if [ -f "/data/adb/miyabi_disabled" ]; then
-    if [ "$CURRENT_STATE" = "active" ]; then
-      # Turn off breaker: unsuspend packages, restore appops, remove firewall rules
-      USER_IDS=$(get_users)
-      if [ -z "$USER_IDS" ]; then
-        USER_IDS="0"
-      fi
-      
-      # Clean up network blocks
-      for P in $TARGET_PACKAGES; do
-        uids=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:$P($|[[:space:]])" | grep -oE "uid:[0-9,]+" | cut -d':' -f2 | tr ',' ' ' | tr -d '\r' )
-        for UID in $uids; do
-          if [ -n "$UID" ]; then
-            while iptables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null; do
-              iptables -D OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
-            done
-            while ip6tables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null; do
-              ip6tables -D OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
-            done
-          fi
-        done
-        
-        # Restore AppOps
-        for U in $USER_IDS; do
-          for OP in RUN_IN_BACKGROUND RUN_ANY_IN_BACKGROUND WAKE_LOCK START_FOREGROUND ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION GET_USAGE_STATS SYSTEM_ALERT_WINDOW WRITE_SETTINGS; do
-            cmd appops set --user "$U" "$P" "$OP" allow >/dev/null 2>&1 || cmd appops set "$P" "$OP" allow >/dev/null 2>&1
-          done
-        done
-        
-        # Re-whitelist in deviceidle
-        cmd deviceidle whitelist +"$P" >/dev/null 2>&1
-      done
-      
-      CURRENT_STATE="disabled"
-    fi
-    sleep 20
-    continue
-  else
-    if [ "$CURRENT_STATE" = "disabled" ]; then
-      # Re-enable breaker
-      initialize_gms_breaker
-      CURRENT_STATE="active"
+  # Prevent duplicate watchdog instances
+  if [ -f "$PID_FILE" ]; then
+    _old_pid=$(cat "$PID_FILE" 2>/dev/null | tr -dc '0-9')
+    if [ -n "$_old_pid" ] && [ "$_old_pid" != "$$" ] && kill -0 "$_old_pid" 2>/dev/null; then
+      exit 0
     fi
   fi
+  echo "$$" > "$PID_FILE" 2>/dev/null
 
+  # Safe post-boot settle delay (prevents MIUI/HyperOS early-boot Binder thread exhaustion)
+  _delay="${BOOT_DELAY:-45}"
+  [ "$_delay" -lt 15 ] 2>/dev/null && _delay=15
+  log_msg "INFO" "GMS Breaker Miyabi Core v3.0.0 Watchdog started (PID=$$). Settling for ${_delay}s..."
+  sleep "$_delay"
 
+  # Re-load config after settle in case user interacted during boot
+  load_config
 
+  # Self-Healing Boot Reset (configurable via BOOT_SELF_HEAL)
+  if [ "$BOOT_SELF_HEAL" -eq 1 ] && [ "$ENABLED" -eq 0 ]; then
+    ENABLED=1
+    save_config
+    log_msg "INFO" "Boot Self-Heal active: auto re-enabled GMS Breaker."
+  fi
 
+  # Perform initial single-pass setup (zero rapid-loop force-stop -> zero Zygisk deadlock)
+  apply_miyabi_state 1
 
-  # 2. Enforce network blocks using pre-resolved UIDs (zero Java vm overhead!)
-  for UID in $BLOCKED_UIDS; do
-    iptables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null || iptables -I OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
-    ip6tables -C OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null || ip6tables -I OUTPUT -m owner --uid-owner "$UID" -j DROP 2>/dev/null
+  # Ultra-Low-Overhead Watchdog Loop (wakes every 60s, ZERO Java/Binder spam)
+  while true; do
+    sleep 60
+
+    # Sync with legacy flag file if toggled externally by third-party scripts
+    load_config
+    if [ -f "$LEGACY_FLAG" ] && [ "$ENABLED" -eq 1 ]; then
+      ENABLED=0
+      save_config
+      apply_miyabi_state 0
+      continue
+    elif [ ! -f "$LEGACY_FLAG" ] && [ "$ENABLED" -eq 0 ]; then
+      ENABLED=1
+      save_config
+      apply_miyabi_state 1
+      continue
+    fi
+
+    if [ "$ENABLED" -eq 1 ]; then
+      # 1. Zero-Java firewall integrity guard (auto-heals if VPN/tethering flushed tables)
+      verify_firewall_integrity
+
+      # 2. Screen-Off Smart Deep Doze (ONLY triggers when screen is OFF and NOT charging)
+      run_screen_off_doze
+    fi
   done
-
-  # 3. Force deep device idle (every 120 seconds / 6 loop cycles to save battery)
-  if [ $((COUNTER % 6)) -eq 0 ]; then
-    dumpsys deviceidle force-idle >/dev/null 2>&1
-  fi
-
-  # 4. Run full deep check to re-apply package/appop restrictions (every 5 minutes)
-  COUNTER=$((COUNTER + 1))
-  if [ "$COUNTER" -ge "$DEEP_CHECK_INTERVAL" ]; then
-    initialize_gms_breaker
-    COUNTER=0
-  fi
-
-  sleep 20
-done
 ) &
-

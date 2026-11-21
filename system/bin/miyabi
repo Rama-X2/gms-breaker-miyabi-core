@@ -1,69 +1,309 @@
 #!/system/bin/sh
+# ==============================================================================
+# GMS Breaker Miyabi Core v3.0.0 - Universal CLI Utility
+# Copyright (C) 2026 Rama-X2
+# Licensed under the GNU General Public License, Version 3.0
+# Source: https://github.com/Rama-X2/gms-breaker-miyabi-core
+# ==============================================================================
 
-# Ensure running as root
+# Ensure root privileges
 if [ "$(id -u)" -ne 0 ]; then
-  echo "[!] Error: This command requires root access."
-  echo "    Use 'su -c miyabi <arg>' or enter root shell ('su') first."
+  echo "[!] Error: Root access is required."
+  echo "    Run 'su -c miyabi <command>' or enter root shell ('su') first."
   exit 1
 fi
 
-# Validate arguments
-if [ -z "$1" ] || [ "$1" != "on" -a "$1" != "off" -a "$1" != "status" ] 2>/dev/null; then
+MODDIR="/data/adb/modules/gms-breaker-miyabi-core"
+export MODDIR
+
+if [ ! -f "$MODDIR/core.sh" ]; then
+  echo "[!] Error: Miyabi Core engine not found at $MODDIR/core.sh"
+  echo "    Please verify the module is installed and enabled."
+  exit 1
+fi
+
+# shellcheck disable=SC1091
+. "$MODDIR/core.sh"
+
+show_help() {
   echo "============================================="
   echo "      🌸 GMS Breaker Miyabi Core CLI 🌸      "
   echo "============================================="
-  echo "Usage:"
-  echo "  miyabi on      - Enable GMS Breaker (Freeze GMS)"
-  echo "  miyabi off     - Disable GMS Breaker (Unfreeze GMS)"
-  echo "  miyabi status  - Check current isolation status"
+  echo "Core Controls (Instant Execution — Zero Reboot):"
+  echo "  miyabi on                  Enable GMS Breaker"
+  echo "  miyabi off                 Pause GMS Breaker (Restore GMS)"
+  echo "  miyabi toggle              Quick toggle ON <-> OFF"
+  echo "  miyabi status              Live telemetry & RAM dashboard"
+  echo ""
+  echo "Smart Isolation Profiles:"
+  echo "  miyabi mode doze           Smart Doze (Push Notif & Play Safe)"
+  echo "  miyabi mode balanced       Balanced (Bg Restricted, Fg Ready)"
+  echo "  miyabi mode extreme        Extreme (Full Firewall & Gaming Max)"
+  echo "  miyabi gaming              1-Shot Gaming Mode (Extreme + Clean)"
+  echo "  miyabi clean               Run safe 1-shot GMS memory sweep"
+  echo ""
+  echo "Package Exclusions & Config:"
+  echo "  miyabi exclude <pkg>       Exclude package (e.g. com.android.vending)"
+  echo "  miyabi include <pkg>       Re-include package into isolation"
+  echo "  miyabi config              Show all persistent settings"
+  echo "  miyabi config <key> <val>  Set option & apply immediately"
+  echo "     Keys: firewall, smart_doze, telemetry_mute, boot_self_heal,"
+  echo "           live_desc, exclude_vending, boot_delay"
+  echo ""
+  echo "Diagnostics & Tools:"
+  echo "  miyabi doctor              Run full system & conflict health check"
+  echo "  miyabi log [clear]         View or clear Miyabi operational logs"
+  echo "  miyabi json                Export live telemetry as JSON (WebUI)"
   echo "============================================="
-  exit 0
-fi
+}
 
-FLAG_FILE="/data/adb/miyabi_disabled"
+show_status() {
+  load_config
+  resolve_environment
+  get_gms_process_stats
+
+  _fw_eng=$(cat "$FW_ENGINE_FILE" 2>/dev/null)
+  [ -z "$_fw_eng" ] && _fw_eng="none"
+  _fw_txt="Disabled (Allowed)"
+  if [ "$ENABLED" -eq 1 ]; then
+    if [ "$MODE" = "extreme" ] && [ "$FIREWALL" -eq 1 ]; then
+      if is_firewall_active; then
+        _fw_txt="Active ($_fw_eng — $(echo $TARGET_UIDS | wc -w | tr -dc '0-9') UIDs)"
+      elif [ "$_fw_eng" = "netpolicy" ]; then
+        _fw_txt="Active (netpolicy eBPF)"
+      else
+        _fw_txt="Warning (Rules Missing — run 'miyabi on')"
+      fi
+    elif [ "$MODE" = "balanced" ]; then
+      _fw_txt="Background-Only (netpolicy eBPF)"
+    else
+      _fw_txt="Open (Smart Doze — Notif Safe)"
+    fi
+  fi
+
+  _sys_cnt=$(cat "$SYSCONFIG_FILE" 2>/dev/null | tr -dc '0-9')
+  [ -z "$_sys_cnt" ] && _sys_cnt=0
+  _dpid=$(cat "$PID_FILE" 2>/dev/null | tr -dc '0-9')
+  if [ -n "$_dpid" ] && kill -0 "$_dpid" 2>/dev/null; then
+    _daemon_txt="Running (PID $_dpid)"
+  else
+    _daemon_txt="Not Running"
+  fi
+
+  echo "============================================="
+  echo "            Miyabi Core Status               "
+  echo "============================================="
+  if [ "$ENABLED" -eq 1 ]; then
+    echo " State           : ACTIVE (Isolated)"
+  else
+    echo " State           : PAUSED (Google Services Active)"
+  fi
+  echo " Profile Mode    : $MODE"
+  echo " Firewall Engine : $_fw_txt"
+  echo " Sysconfig Doze  : $([ "$_sys_cnt" -gt 0 ] && echo "Patched ($_sys_cnt XML)" || echo "Runtime Only")"
+  echo " Screen-Off Doze : $([ "$SMART_DOZE" -eq 1 ] && echo "Enabled" || echo "Disabled")"
+  echo " Telemetry Mute  : $([ "$TELEMETRY_MUTE" -eq 1 ] && echo "Enabled" || echo "Disabled")"
+  echo " Play Store Excl : $([ "$EXCLUDE_VENDING" -eq 1 ] && echo "Yes (Allowed)" || echo "No (Isolated)")"
+  echo " Watchdog Daemon : $_daemon_txt"
+  echo "---------------------------------------------"
+  echo " GMS Processes   : $GMS_PROC_COUNT active (~${GMS_RAM_MB} MB RAM)"
+  echo " Target Packages : $(echo $ACTIVE_TARGET_PKGS | wc -w | tr -dc '0-9') isolated / $(echo $INSTALLED_ALL | wc -w | tr -dc '0-9') installed"
+  echo " Active Users    : $USER_IDS"
+  echo "============================================="
+}
+
+run_doctor() {
+  load_config
+  resolve_environment
+  get_gms_process_stats
+
+  echo "============================================="
+  echo "            Miyabi Core Doctor               "
+  echo "============================================="
+  echo " Device          : $(getprop ro.product.brand) $(getprop ro.product.model)"
+  echo " Android / SDK   : Android $(getprop ro.build.version.release) (SDK $(get_sdk_level))"
+  echo " Kernel          : $(uname -r)"
+  echo " Root Manager    : $(detect_root_manager)"
+  echo " Fast UID Reader : $([ -r /data/system/packages.list ] && echo "OK (/data/system/packages.list — 0ms)" || echo "Fallback (cmd package)")"
+  echo " nftables Binary : $(command -v nft >/dev/null 2>&1 && echo "Available" || echo "Not Found")"
+  echo " iptables Binary : $(command -v iptables >/dev/null 2>&1 && echo "Available" || echo "Not Found")"
+  echo " Active FW State : $(is_firewall_active && echo "Enforced ($(cat "$FW_ENGINE_FILE" 2>/dev/null))" || echo "Inactive / $(cat "$FW_ENGINE_FILE" 2>/dev/null || echo none)")"
+  echo " Sysconfig Patch : $(cat "$SYSCONFIG_FILE" 2>/dev/null || echo 0) XML files overlaid"
+  echo "---------------------------------------------"
+  echo " Module Conflict Scan:"
+  _conflicts=0
+  for _m in /data/adb/modules/*; do
+    [ -d "$_m" ] || continue
+    _mid=$(basename "$_m")
+    [ "$_mid" = "gms-breaker-miyabi-core" ] && continue
+    [ -f "$_m/disable" ] || [ -f "$_m/remove" ] && continue
+    if find "$_m" -name "*google*.xml" -path "*/sysconfig/*" 2>/dev/null | grep -q .; then
+      echo "  [!] Sysconfig overlap detected with module: $_mid"
+      _conflicts=$((_conflicts + 1))
+    fi
+  done
+  [ "$_conflicts" -eq 0 ] && echo "  [+] No conflicting GMS Doze modules detected."
+  echo "---------------------------------------------"
+  echo " Safety & Integrity Guarantees:"
+  echo "  [+] No SIGSTOP/SIGCONT (Zero Binder Hang)"
+  echo "  [+] No 'cmd appops reset' (MIUI/HyperOS Permission Safe)"
+  echo "  [+] No 'cmd package suspend' (Magisk DenyList Safe)"
+  echo "  [+] No Loop Force-Stop (Zero Zygisk Deadlock)"
+  echo "  [+] Play Integrity / HMA / SafetyNet Untouched"
+  echo "============================================="
+}
 
 case "$1" in
-  on)
-    if [ -f "$FLAG_FILE" ]; then
-      rm -f "$FLAG_FILE"
-      echo "[+] GMS Breaker Miyabi Core: ENABLED (GMS will be frozen shortly)"
+  on|enable)
+    load_config
+    ENABLED=1
+    save_config
+    apply_miyabi_state 1
+    echo "[+] GMS Breaker Miyabi Core ENABLED instantly (Mode: $MODE)."
+    ;;
+  off|disable)
+    load_config
+    ENABLED=0
+    save_config
+    apply_miyabi_state 0
+    echo "[+] GMS Breaker Miyabi Core PAUSED instantly. Google Services restored."
+    ;;
+  toggle)
+    load_config
+    if [ "$ENABLED" -eq 1 ]; then
+      ENABLED=0
+      save_config
+      apply_miyabi_state 0
+      echo "[+] Toggled OFF -> Google Services restored."
     else
-      echo "[!] GMS Breaker is already enabled."
+      ENABLED=1
+      save_config
+      apply_miyabi_state 1
+      echo "[+] Toggled ON -> Mode: $MODE active."
     fi
     ;;
-  off)
-    if [ ! -f "$FLAG_FILE" ]; then
-      touch "$FLAG_FILE"
-      echo "[+] GMS Breaker Miyabi Core: TEMPORARILY DISABLED (GMS active)"
+  mode)
+    case "$2" in
+      doze|balanced|extreme)
+        load_config
+        MODE="$2"
+        ENABLED=1
+        save_config
+        apply_miyabi_state 1
+        echo "[+] Profile switched to '$MODE' and applied instantly."
+        ;;
+      *)
+        echo "[!] Invalid mode. Choose one of: doze | balanced | extreme"
+        exit 1
+        ;;
+    esac
+    ;;
+  gaming)
+    load_config
+    MODE="extreme"
+    ENABLED=1
+    FIREWALL=1
+    save_config
+    apply_miyabi_state 1
+    echo "[+] Gaming Boost Active! Mode set to EXTREME & GMS swept cleanly."
+    ;;
+  clean)
+    if run_deep_clean; then
+      echo "[+] Safe 1-shot Deep Clean complete."
     else
-      echo "[!] GMS Breaker is already disabled."
+      echo "[!] Miyabi Core is paused. Enable it first with 'miyabi on'."
+      exit 1
     fi
+    ;;
+  exclude)
+    if [ -z "$2" ]; then
+      echo "[!] Usage: miyabi exclude <package_name>"
+      exit 1
+    fi
+    set_pkg_exclude "$2" 1
+    apply_miyabi_state 0
+    echo "[+] Excluded '$2' from isolation and restored its permissions."
+    ;;
+  include)
+    if [ -z "$2" ]; then
+      echo "[!] Usage: miyabi include <package_name>"
+      exit 1
+    fi
+    set_pkg_exclude "$2" 0
+    apply_miyabi_state 1
+    echo "[+] Re-included '$2' into Miyabi isolation."
+    ;;
+  config)
+    load_config
+    if [ -z "$2" ]; then
+      cat "$CONFIG_FILE"
+      exit 0
+    fi
+    _key="$2"
+    _val="$3"
+    case "$_key" in
+      firewall)
+        [ "$_val" = "0" -o "$_val" = "1" ] || { echo "[!] Use 0 or 1"; exit 1; }
+        FIREWALL="$_val"
+        ;;
+      smart_doze)
+        [ "$_val" = "0" -o "$_val" = "1" ] || { echo "[!] Use 0 or 1"; exit 1; }
+        SMART_DOZE="$_val"
+        ;;
+      telemetry_mute)
+        [ "$_val" = "0" -o "$_val" = "1" ] || { echo "[!] Use 0 or 1"; exit 1; }
+        TELEMETRY_MUTE="$_val"
+        ;;
+      boot_self_heal)
+        [ "$_val" = "0" -o "$_val" = "1" ] || { echo "[!] Use 0 or 1"; exit 1; }
+        BOOT_SELF_HEAL="$_val"
+        ;;
+      live_desc)
+        [ "$_val" = "0" -o "$_val" = "1" ] || { echo "[!] Use 0 or 1"; exit 1; }
+        LIVE_DESC="$_val"
+        ;;
+      exclude_vending)
+        [ "$_val" = "0" -o "$_val" = "1" ] || { echo "[!] Use 0 or 1"; exit 1; }
+        EXCLUDE_VENDING="$_val"
+        ;;
+      boot_delay)
+        case "$_val" in ''|*[!0-9]*) echo "[!] Use seconds (15-180)"; exit 1 ;; esac
+        [ "$_val" -lt 15 ] && _val=15
+        [ "$_val" -gt 180 ] && _val=180
+        BOOT_DELAY="$_val"
+        ;;
+      *)
+        echo "[!] Unknown config key: $_key"
+        exit 1
+        ;;
+    esac
+    save_config
+    apply_miyabi_state 0
+    echo "[+] Updated $_key=$_val and applied."
     ;;
   status)
-    echo "============================================="
-    echo "            Miyabi Core Status               "
-    echo "============================================="
-    if [ -f "$FLAG_FILE" ]; then
-      echo "Breaker Status : TEMPORARILY DISABLED (GMS Active)"
+    show_status
+    ;;
+  doctor)
+    run_doctor
+    ;;
+  log)
+    if [ "$2" = "clear" ]; then
+      : > "$LOG_FILE" 2>/dev/null
+      echo "[+] Miyabi Core log cleared."
     else
-      echo "Breaker Status : ENABLED (GMS Isolated)"
+      if [ -f "$LOG_FILE" ]; then
+        tail -n 60 "$LOG_FILE"
+      else
+        echo "[i] No logs recorded yet."
+      fi
     fi
-    
-    # Check GMS/GSF/Vending process status
-    GMS_PIDS=$(pgrep -f com.google.android.gms; pgrep -f com.google.process.gservices; pgrep -f com.android.vending)
-    if [ -z "$GMS_PIDS" ]; then
-      echo "GMS Processes  : Suspended/Stopped"
-    else
-      echo "GMS Processes  : Running"
-    fi
-    
-    # Check GMS network block status
-    GMS_UID=$( (cmd package list packages -U 2>/dev/null || pm list packages -U 2>/dev/null) | grep -E "^package:com.google.android.gms($|[[:space:]])" | grep -oE "uid:[0-9,]+" | cut -d':' -f2 | cut -d',' -f1 | tr -d '\r' )
-    if [ -n "$GMS_UID" ] && iptables -C OUTPUT -m owner --uid-owner "$GMS_UID" -j DROP 2>/dev/null; then
-      echo "Network Block  : Enabled (Blocked)"
-    else
-      echo "Network Block  : Disabled (Allowed)"
-    fi
-    echo "============================================="
+    ;;
+  json)
+    print_status_json
+    ;;
+  *)
+    show_help
     ;;
 esac
+exit 0

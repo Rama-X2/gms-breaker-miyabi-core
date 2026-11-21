@@ -1,13 +1,15 @@
-# Allow Magisk daemon to control network (iptables owner match)
-allow magiskd self:capability net_admin;
-allow magiskd self:capability net_raw;
+# GMS Breaker Miyabi Core v3.0.0 - SELinux Policy Rules
+# Compatible with Magisk, KernelSU, and APatch (magiskpolicy syntax)
 
-# Allow access to proc_net for UID network isolation
+# Allow Magisk daemon to control netfilter (nftables / iptables owner match)
+allow magiskd self:capability { net_admin net_raw };
+
+# Allow read/write access to proc_net for UID network isolation
 allow magiskd proc_net:file { read write open getattr };
 
-# Allow access to sysfs (device idle / power control)
-allow magiskd sysfs:file { read write open getattr };
+# Allow read access to sysfs (battery/charging & power_supply status)
+allow magiskd sysfs:file { read open getattr };
 
-# Allow interaction with system_server for appops & suspend
+# Allow clean Binder IPC with system_server (appops, deviceidle, netpolicy)
 allow magiskd system_server:binder call;
 allow magiskd system_server:service_manager find;

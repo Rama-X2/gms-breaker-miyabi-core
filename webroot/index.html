@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="color-scheme" content="light dark">
+<title>GMS Breaker Miyabi Core</title>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --surface-2: #f1f3f9;
+    --border: #e2e5ef;
+    --border-strong: #cbd2e1;
+    --accent: #4f46e5;
+    --accent-strong: #4338ca;
+    --accent-soft: rgba(79, 70, 229, 0.10);
+    --accent-border: rgba(79, 70, 229, 0.42);
+    --ok: #16a34a;
+    --ok-soft: rgba(22, 163, 74, 0.11);
+    --warn: #d97706;
+    --warn-soft: rgba(217, 119, 6, 0.11);
+    --danger: #dc2626;
+    --danger-soft: rgba(220, 38, 38, 0.10);
+    --info: #2563eb;
+    --info-soft: rgba(37, 99, 235, 0.10);
+    --text: #0f172a;
+    --text-dim: #475569;
+    --text-mute: #64748b;
+    --log-bg: #f8fafc;
+    --log-text: #1e293b;
+    --nav-bg: rgba(255, 255, 255, 0.92);
+    --toast-bg: #0f172a;
+    --toast-text: #f8fafc;
+    --switch-off: #cbd5e1;
+    --shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --radius: 14px;
+    --radius-sm: 10px;
+    --safe-top: env(safe-area-inset-top, 12px);
+    --safe-bottom: env(safe-area-inset-bottom, 14px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0d12;
+      --surface: #14161f;
+      --surface-2: #1b1e2b;
+      --border: #262a3a;
+      --border-strong: #353b52;
+      --accent: #6366f1;
+      --accent-strong: #818cf8;
+      --accent-soft: rgba(99, 102, 241, 0.14);
+      --accent-border: rgba(99, 102, 241, 0.50);
+      --ok: #22c55e;
+      --ok-soft: rgba(34, 197, 94, 0.13);
+      --warn: #f59e0b;
+      --warn-soft: rgba(245, 158, 11, 0.13);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.13);
+      --info: #60a5fa;
+      --info-soft: rgba(96, 165, 250, 0.13);
+      --text: #f1f5f9;
+      --text-dim: #94a3b8;
+      --text-mute: #64748b;
+      --log-bg: #090a0f;
+      --log-text: #cbd5e1;
+      --nav-bg: rgba(16, 18, 26, 0.94);
+      --toast-bg: #1e2233;
+      --toast-text: #f1f5f9;
+      --switch-off: #33394f;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0c0d12;
+    --surface: #14161f;
+    --surface-2: #1b1e2b;
+    --border: #262a3a;
+    --border-strong: #353b52;
+    --accent: #6366f1;
+    --accent-strong: #818cf8;
+    --accent-soft: rgba(99, 102, 241, 0.14);
+    --accent-border: rgba(99, 102, 241, 0.50);
+    --ok: #22c55e;
+    --ok-soft: rgba(34, 197, 94, 0.13);
+    --warn: #f59e0b;
+    --warn-soft: rgba(245, 158, 11, 0.13);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.13);
+    --info: #60a5fa;
+    --info-soft: rgba(96, 165, 250, 0.13);
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+    --text-mute: #64748b;
+    --log-bg: #090a0f;
+    --log-text: #cbd5e1;
+    --nav-bg: rgba(16, 18, 26, 0.94);
+    --toast-bg: #1e2233;
+    --toast-text: #f1f5f9;
+    --switch-off: #33394f;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: calc(var(--safe-top) + 14px) 16px calc(var(--safe-bottom) + 82px);
+    line-height: 1.45;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .container {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .brand-wrap {
+    min-width: 0;
+  }
+
+  .brand-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.25px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ver-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    border: 1px solid var(--accent-border);
+  }
+
+  .brand-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    height: 36px;
+    min-width: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: border-color 0.15s ease, transform 0.12s ease;
+  }
+
+  .icon-btn:active {
+    transform: scale(0.95);
+  }
+
+  .icon-btn.spinning svg {
+    animation: spin 0.75s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Demo Banner */
+  .demo-banner {
+    display: none;
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    font-size: 12px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-mute);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Status Header */
+  .hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .status-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+
+  .status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ok);
+    flex-shrink: 0;
+  }
+
+  .status-dot.paused {
+    background: var(--warn);
+  }
+
+  .hero-state {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .hero-desc {
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+
+  /* Switch */
+  .switch {
+    position: relative;
+    width: 50px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: var(--switch-off);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .slider::before {
+    content: "";
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 3px;
+    top: 3px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  .switch input:checked + .slider {
+    background: var(--accent);
+  }
+
+  .switch input:checked + .slider::before {
+    transform: translateX(22px);
+  }
+
+  .switch.sm {
+    width: 44px;
+    height: 24px;
+  }
+
+  .switch.sm .slider::before {
+    width: 18px;
+    height: 18px;
+  }
+
+  .switch.sm input:checked + .slider::before {
+    transform: translateX(20px);
+  }
+
+  /* Metrics Grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .metric-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    color: var(--text-mute);
+    margin-bottom: 2px;
+  }
+
+  .metric-val {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .metric-val.ok { color: var(--ok); }
+  .metric-val.accent { color: var(--accent-strong); }
+  .metric-val.warn { color: var(--warn); }
+
+  /* Profile Mode Cards */
+  .mode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .mode-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+  }
+
+  .mode-card:active {
+    transform: scale(0.99);
+  }
+
+  .mode-card.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  .mode-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mode-name {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .mode-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .mode-card.active .mode-tag {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .mode-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  .radio-ring {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease;
+  }
+
+  .mode-card.active .radio-ring {
+    border-color: var(--accent);
+  }
+
+  .radio-ring::after {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    transform: scale(0);
+    transition: transform 0.15s ease;
+  }
+
+  .mode-card.active .radio-ring::after {
+    transform: scale(1);
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .btn {
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s ease, transform 0.12s ease;
+  }
+
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  .btn-secondary {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  /* Settings Rows */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .setting-row:last-child { border-bottom: none; padding-bottom: 2px; }
+  .setting-row:first-child { padding-top: 2px; }
+
+  .setting-label {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .setting-desc {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .pill-group {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .pill-btn {
+    padding: 5px 9px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+
+  .pill-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  /* Packages List */
+  .pkg-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pkg-item:last-child { border-bottom: none; }
+
+  .pkg-meta {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .pkg-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pkg-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .mini-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .mini-badge.core { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent-strong); }
+  .mini-badge.run { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+  .mini-badge.idle { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+  .mini-badge.excl { background: var(--info-soft); border-color: transparent; color: var(--info); }
+
+  .pkg-btn {
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .pkg-btn.excluded {
+    background: var(--info-soft);
+    border-color: var(--info);
+    color: var(--info);
+  }
+
+  /* Diagnostics & Logs */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 0;
+    font-size: 12.5px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .info-row:last-child { border-bottom: none; }
+  .info-k { color: var(--text-dim); }
+  .info-v { font-weight: 600; text-align: right; word-break: break-word; }
+
+  .safety-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .safety-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 9px;
+  }
+
+  .safety-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+    flex-shrink: 0;
+  }
+
+  .log-box {
+    background: var(--log-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-family: ui-monospace, 'Cascadia Mono', 'Roboto Mono', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--log-text);
+    max-height: 260px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* Tabs */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Bottom Navigation */
+  .bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--nav-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    padding: 7px 16px calc(var(--safe-bottom) + 6px);
+    z-index: 50;
+  }
+
+  .nav-inner {
+    max-width: 520px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .nav-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-mute);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 7px 4px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .nav-btn svg {
+    width: 19px;
+    height: 19px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .nav-btn.active {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--safe-bottom) + 74px);
+    transform: translateX(-50%) translateY(12px);
+    background: var(--toast-bg);
+    border: 1px solid var(--border-strong);
+    color: var(--toast-text);
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Busy progress line */
+  .busy-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2.5px;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 200;
+    transition: opacity 0.15s ease;
+  }
+
+  .busy-bar.active {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+<div id="busyBar" class="busy-bar"></div>
+
+<div class="container">
+  <!-- Header (text only, no icon badge) -->
+  <header class="header">
+    <div class="brand-wrap">
+      <div class="brand-title">GMS Breaker Miyabi Core <span class="ver-pill" id="verPill">v3.0.0</span></div>
+      <div class="brand-sub">Runtime GMS Isolation</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeBtn" title="Switch Theme (Auto / Light / Dark)" onclick="cycleTheme()">
+        <span id="themeIcon"></span>
+        <span id="themeLabel">Auto</span>
+      </button>
+      <button class="icon-btn" id="refreshBtn" title="Refresh" onclick="refreshAll(true)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="demoBanner" class="demo-banner">
+    Browser Preview Mode - Open inside KernelSU, APatch, or MMRL for live root control.
+  </div>
+
+  <!-- TAB 1: DASHBOARD -->
+  <section id="tab-dashboard" class="tab-panel active">
+    <div class="card">
+      <div class="hero-top">
+        <div>
+          <div class="status-line">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="heroState" class="hero-state">Loading...</span>
+          </div>
+          <div id="heroDesc" class="hero-desc">Reading module state...</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="masterToggle" onchange="onMasterToggle(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">GMS Memory (RSS)</div>
+          <div class="metric-val accent" id="mRam">-- MB</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Active Processes</div>
+          <div class="metric-val" id="mProcs">--</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Firewall Engine</div>
+          <div class="metric-val ok" id="mFirewall">--</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Sysconfig Doze</div>
+          <div class="metric-val accent" id="mSysconfig">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Isolation Profile</span>
+        <span style="font-size:11px;color:var(--accent-strong);text-transform:none;font-weight:600;">Instant Switch</span>
+      </div>
+      <div class="mode-list">
+        <button class="mode-card" id="mode-doze" onclick="setMode('doze')">
+          <div class="mode-info">
+            <div class="mode-name">Smart Doze <span class="mode-tag">Daily Driver</span></div>
+            <div class="mode-sub">Deep sleep battery saving. Push notifications (FCM), Play Store, and Google login keep working.</div>
+          </div>
+          <span class="radio-ring"></span>
+        </button>
+        <button class="mode-card" id="mode-balanced" onclick="setMode('balanced')">
+          <div class="mode-info">
+            <div class="mode-name">Balanced <span class="mode-tag">Hybrid</span></div>
+            <div class="mode-sub">Restricts background CPU, wakelocks, and eBPF background data. Foreground apps stay responsive.</div>
+          </div>
+          <span class="radio-ring"></span>
+        </button>
+        <button class="mode-card" id="mode-extreme" onclick="setMode('extreme')">
+          <div class="mode-info">
+            <div class="mode-name">Extreme <span class="mode-tag">Max Gaming</span></div>
+            <div class="mode-sub">Full IPv4/IPv6 firewall isolation, strict AppOps, and deep Doze for maximum gaming stability.</div>
+          </div>
+          <span class="radio-ring"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>Quick Actions</span></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="runGamingBoost()">Gaming Boost</button>
+        <button class="btn btn-secondary" onclick="runDeepClean()">Deep Clean</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: SETTINGS & PACKAGES -->
+  <section id="tab-settings" class="tab-panel">
+    <div class="card">
+      <div class="card-title"><span>Appearance</span></div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Theme</div>
+          <div class="setting-desc">Auto follows your phone system dark/light setting</div>
+        </div>
+        <div class="pill-group" id="themePills">
+          <button class="pill-btn" data-theme-val="auto" onclick="applyTheme('auto', true)">Auto</button>
+          <button class="pill-btn" data-theme-val="light" onclick="applyTheme('light', true)">Light</button>
+          <button class="pill-btn" data-theme-val="dark" onclick="applyTheme('dark', true)">Dark</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>Engine Settings</span></div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Network Firewall Isolation</div>
+          <div class="setting-desc">Drop IPv4/IPv6 GMS packets via nftables/iptables (Extreme mode)</div>
+        </div>
+        <label class="switch sm">
+          <input type="checkbox" id="cfg-firewall" onchange="setConfig('firewall', this.checked ? 1 : 0)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Screen-Off Smart Doze</div>
+          <div class="setting-desc">Triggers deep idle only when screen is off and unplugged</div>
+        </div>
+        <label class="switch sm">
+          <input type="checkbox" id="cfg-smart_doze" onchange="setConfig('smart_doze', this.checked ? 1 : 0)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Telemetry Services Mute</div>
+          <div class="setting-desc">Disables analytics/ads/measurement components (FCM and Auth safe)</div>
+        </div>
+        <label class="switch sm">
+          <input type="checkbox" id="cfg-telemetry_mute" onchange="setConfig('telemetry_mute', this.checked ? 1 : 0)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Exclude Google Play Store</div>
+          <div class="setting-desc">Keep Play Store active while isolating background GMS</div>
+        </div>
+        <label class="switch sm">
+          <input type="checkbox" id="cfg-exclude_vending" onchange="setConfig('exclude_vending', this.checked ? 1 : 0)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Auto-Enable on Boot</div>
+          <div class="setting-desc">Re-enables isolation on reboot if left paused</div>
+        </div>
+        <label class="switch sm">
+          <input type="checkbox" id="cfg-boot_self_heal" onchange="setConfig('boot_self_heal', this.checked ? 1 : 0)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Live Module Description</div>
+          <div class="setting-desc">Show current mode and firewall status in Root Manager card</div>
+        </div>
+        <label class="switch sm">
+          <input type="checkbox" id="cfg-live_desc" onchange="setConfig('live_desc', this.checked ? 1 : 0)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Boot Settle Delay</div>
+          <div class="setting-desc">Post-boot wait time to prevent Binder/Zygisk stress</div>
+        </div>
+        <div class="pill-group" id="delayPills">
+          <button class="pill-btn" data-val="30" onclick="setConfig('boot_delay', 30)">30s</button>
+          <button class="pill-btn" data-val="45" onclick="setConfig('boot_delay', 45)">45s</button>
+          <button class="pill-btn" data-val="60" onclick="setConfig('boot_delay', 60)">60s</button>
+          <button class="pill-btn" data-val="90" onclick="setConfig('boot_delay', 90)">90s</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Detected Google Packages</span>
+        <span id="pkgCountLabel" style="font-size:11px;color:var(--text-mute);">0 installed</span>
+      </div>
+      <div id="pkgList">
+        <div style="font-size:12px;color:var(--text-mute);padding:8px 0;">Scanning packages...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: DOCTOR & LOGS -->
+  <section id="tab-doctor" class="tab-panel">
+    <div class="card">
+      <div class="card-title"><span>System Diagnostics</span></div>
+      <div class="info-row"><span class="info-k">Device</span><span class="info-v" id="dDevice">--</span></div>
+      <div class="info-row"><span class="info-k">Android / SDK</span><span class="info-v" id="dAndroid">--</span></div>
+      <div class="info-row"><span class="info-k">Kernel</span><span class="info-v" id="dKernel">--</span></div>
+      <div class="info-row"><span class="info-k">Root Manager</span><span class="info-v" id="dRoot">--</span></div>
+      <div class="info-row"><span class="info-k">Watchdog Daemon</span><span class="info-v" id="dDaemon">--</span></div>
+      <div class="info-row"><span class="info-k">Blocked UIDs</span><span class="info-v" id="dUids">--</span></div>
+
+      <div class="safety-grid">
+        <div class="safety-chip"><span class="safety-dot"></span>No SIGSTOP Hang</div>
+        <div class="safety-chip"><span class="safety-dot"></span>MIUI / HyperOS Safe</div>
+        <div class="safety-chip"><span class="safety-dot"></span>DenyList Safe</div>
+        <div class="safety-chip"><span class="safety-dot"></span>Play Integrity Safe</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Operational Logs</span>
+        <div style="display:flex;gap:8px;">
+          <button class="pkg-btn" onclick="loadLogs()">Reload</button>
+          <button class="pkg-btn" style="color:var(--danger);" onclick="clearLogs()">Clear</button>
+        </div>
+      </div>
+      <pre class="log-box" id="logBox">Loading logs...</pre>
+    </div>
+  </section>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-btn" data-tab="settings" onclick="switchTab('settings', this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
+    <button class="nav-btn" data-tab="doctor" onclick="switchTab('doctor', this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Doctor</span>
+    </button>
+  </div>
+</nav>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const MIYABI_BIN = 'sh /data/adb/modules/gms-breaker-miyabi-core/system/bin/miyabi';
+const THEME_KEY = 'miyabi_theme_pref';
+let currentThemePref = 'auto';
+let isDemoMode = false;
+let isBusy = false;
+let toastTimer = null;
+
+const ICONS = {
+  auto: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>',
+  light: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  dark: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+};
+
+// Preview state when opened outside root WebView
+let demoState = {
+  version: 'v3.0.0',
+  enabled: true,
+  mode: 'extreme',
+  firewall: true,
+  smart_doze: true,
+  telemetry_mute: true,
+  boot_self_heal: true,
+  live_desc: true,
+  exclude_vending: false,
+  boot_delay: 45,
+  fw_engine: 'nftables',
+  fw_active: true,
+  blocked_uid_count: 9,
+  sysconfig_patched: 2,
+  gms_proc_count: 0,
+  gms_ram_mb: 0,
+  daemon_running: true,
+  daemon_pid: 4812,
+  device: 'Xiaomi Preview Device',
+  android_ver: '15',
+  android_sdk: 35,
+  kernel: '6.1.75-android15-gki',
+  root_manager: 'KernelSU (Preview)',
+  packages: [
+    { pkg: 'com.google.android.gms', uid: '10142', role: 'core', excluded: false, running: false },
+    { pkg: 'com.google.android.gsf', uid: '10142', role: 'core', excluded: false, running: false },
+    { pkg: 'com.android.vending', uid: '10158', role: 'core', excluded: false, running: false },
+    { pkg: 'com.google.android.feedback', uid: '10177', role: 'aux', excluded: false, running: false },
+    { pkg: 'com.google.android.partnersetup', uid: '10181', role: 'aux', excluded: false, running: false },
+    { pkg: 'com.google.android.backuptransport', uid: '10190', role: 'aux', excluded: false, running: false }
+  ]
+};
+
+function applyTheme(pref, announce = false) {
+  const valid = (pref === 'light' || pref === 'dark') ? pref : 'auto';
+  currentThemePref = valid;
+  try { localStorage.setItem(THEME_KEY, valid); } catch (e) {}
+
+  if (valid === 'auto') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', valid);
+  }
+
+  document.getElementById('themeIcon').innerHTML = ICONS[valid];
+  document.getElementById('themeLabel').textContent = valid === 'auto' ? 'Auto' : (valid === 'light' ? 'Light' : 'Dark');
+
+  document.querySelectorAll('#themePills .pill-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.themeVal === valid);
+  });
+
+  if (announce) {
+    showToast('Theme: ' + (valid === 'auto' ? 'Auto (System)' : (valid === 'light' ? 'Light' : 'Dark')));
+  }
+}
+
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark'];
+  const next = order[(order.indexOf(currentThemePref) + 1) % order.length];
+  applyTheme(next, true);
+}
+
+function initTheme() {
+  let saved = 'auto';
+  try {
+    const v = localStorage.getItem(THEME_KEY);
+    if (v === 'light' || v === 'dark' || v === 'auto') saved = v;
+  } catch (e) {}
+  applyTheme(saved, false);
+}
+
+// Universal KernelSU / APatch / MMRL / WebUI-X Bridge
+function ksuExec(cmd, options = {}) {
+  return new Promise((resolve, reject) => {
+    if (typeof window.ksu === 'undefined' || typeof window.ksu.exec !== 'function') {
+      return reject(new Error('NO_BRIDGE'));
+    }
+    const cbName = 'miyabi_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    let settled = false;
+    const cleanup = () => {
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+    };
+    window[cbName] = (errno, stdout, stderr) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve({ errno: Number(errno) || 0, stdout: String(stdout || ''), stderr: String(stderr || '') });
+    };
+    try {
+      const ret = window.ksu.exec(cmd, JSON.stringify(options), cbName);
+      if (ret && typeof ret.then === 'function') {
+        ret.then((res) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve(res || { errno: 0, stdout: '', stderr: '' });
+        }).catch((err) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(err);
+        });
+      }
+    } catch (err) {
+      cleanup();
+      reject(err);
+    }
+  });
+}
+
+function setBusy(state) {
+  isBusy = state;
+  document.getElementById('busyBar').classList.toggle('active', state);
+  document.getElementById('refreshBtn').classList.toggle('spinning', state);
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'doctor') loadLogs();
+}
+
+function renderState(s) {
+  document.getElementById('verPill').textContent = s.version || 'v3.0.0';
+
+  const dot = document.getElementById('statusDot');
+  const heroState = document.getElementById('heroState');
+  const heroDesc = document.getElementById('heroDesc');
+  const masterToggle = document.getElementById('masterToggle');
+
+  masterToggle.checked = !!s.enabled;
+  if (s.enabled) {
+    dot.classList.remove('paused');
+    const modeTitle = s.mode === 'doze' ? 'Smart Doze Active' : (s.mode === 'balanced' ? 'Balanced Active' : 'Extreme Active');
+    heroState.textContent = modeTitle;
+    heroDesc.textContent = s.mode === 'doze'
+      ? 'Battery saving active - Push notifications and Play Store enabled'
+      : (s.mode === 'balanced' ? 'Background GMS restricted - Foreground apps ready' : 'Full runtime and network isolation active');
+  } else {
+    dot.classList.add('paused');
+    heroState.textContent = 'Paused (GMS Active)';
+    heroDesc.textContent = 'Google Play Services temporarily restored';
+  }
+
+  document.getElementById('mRam').textContent = (s.gms_ram_mb || 0) + ' MB';
+  const procEl = document.getElementById('mProcs');
+  procEl.textContent = s.gms_proc_count === 0 ? '0 (Idle)' : s.gms_proc_count + ' running';
+  procEl.className = 'metric-val ' + (s.gms_proc_count === 0 ? 'ok' : 'warn');
+
+  const fwEl = document.getElementById('mFirewall');
+  if (!s.enabled) {
+    fwEl.textContent = 'Bypassed';
+    fwEl.className = 'metric-val warn';
+  } else if (s.mode === 'doze') {
+    fwEl.textContent = 'Open (Safe)';
+    fwEl.className = 'metric-val ok';
+  } else if (s.mode === 'balanced') {
+    fwEl.textContent = 'eBPF Bg-Only';
+    fwEl.className = 'metric-val accent';
+  } else if (s.firewall && s.fw_active) {
+    fwEl.textContent = s.fw_engine + ' (Active)';
+    fwEl.className = 'metric-val ok';
+  } else {
+    fwEl.textContent = 'Disabled';
+    fwEl.className = 'metric-val warn';
+  }
+
+  const sysEl = document.getElementById('mSysconfig');
+  sysEl.textContent = s.sysconfig_patched > 0 ? s.sysconfig_patched + ' XML Patched' : 'Runtime Only';
+
+  ['doze', 'balanced', 'extreme'].forEach(m => {
+    const el = document.getElementById('mode-' + m);
+    if (el) el.classList.toggle('active', s.enabled && s.mode === m);
+  });
+
+  document.getElementById('cfg-firewall').checked = !!s.firewall;
+  document.getElementById('cfg-smart_doze').checked = !!s.smart_doze;
+  document.getElementById('cfg-telemetry_mute').checked = !!s.telemetry_mute;
+  document.getElementById('cfg-exclude_vending').checked = !!s.exclude_vending;
+  document.getElementById('cfg-boot_self_heal').checked = !!s.boot_self_heal;
+  document.getElementById('cfg-live_desc').checked = !!s.live_desc;
+
+  document.querySelectorAll('#delayPills .pill-btn').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.val) === Number(s.boot_delay));
+  });
+
+  const pkgs = Array.isArray(s.packages) ? s.packages : [];
+  document.getElementById('pkgCountLabel').textContent = pkgs.length + ' installed';
+  const pkgList = document.getElementById('pkgList');
+  if (pkgs.length === 0) {
+    pkgList.innerHTML = '<div style="font-size:12px;color:var(--text-mute);padding:8px 0;">No Google packages detected.</div>';
+  } else {
+    pkgList.innerHTML = pkgs.map(p => {
+      const safePkg = String(p.pkg).replace(/[^a-zA-Z0-9._]/g, '');
+      return `
+        <div class="pkg-item">
+          <div class="pkg-meta">
+            <div class="pkg-name">${safePkg}</div>
+            <div class="pkg-badges">
+              <span class="mini-badge ${p.role === 'core' ? 'core' : ''}">${p.role.toUpperCase()}</span>
+              <span class="mini-badge">UID ${p.uid || '?'}</span>
+              <span class="mini-badge ${p.running ? 'run' : 'idle'}">${p.running ? 'Running' : 'Stopped'}</span>
+              ${p.excluded ? '<span class="mini-badge excl">Excluded</span>' : ''}
+            </div>
+          </div>
+          <button class="pkg-btn ${p.excluded ? 'excluded' : ''}" onclick="togglePackage('${safePkg}', ${p.excluded ? 'false' : 'true'})">
+            ${p.excluded ? 'Include' : 'Exclude'}
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('dDevice').textContent = s.device || '--';
+  document.getElementById('dAndroid').textContent = 'Android ' + (s.android_ver || '?') + ' (SDK ' + (s.android_sdk || '?') + ')';
+  document.getElementById('dKernel').textContent = s.kernel || '--';
+  document.getElementById('dRoot').textContent = s.root_manager || '--';
+  document.getElementById('dDaemon').textContent = s.daemon_running ? ('Running (PID ' + s.daemon_pid + ')') : 'Not Running';
+  document.getElementById('dUids').textContent = (s.blocked_uid_count || 0) + ' UID(s)';
+}
+
+async function refreshAll(showFeedback = false) {
+  setBusy(true);
+  try {
+    const res = await ksuExec(MIYABI_BIN + ' json');
+    const raw = (res.stdout || '').trim();
+    const startIdx = raw.indexOf('{');
+    const endIdx = raw.lastIndexOf('}');
+    if (res.errno === 0 && startIdx !== -1 && endIdx > startIdx) {
+      const parsed = JSON.parse(raw.slice(startIdx, endIdx + 1));
+      renderState(parsed);
+      if (showFeedback) showToast('Status refreshed');
+    } else {
+      throw new Error(res.stderr || 'Empty output');
+    }
+  } catch (err) {
+    if (err.message === 'NO_BRIDGE') {
+      isDemoMode = true;
+      document.getElementById('demoBanner').style.display = 'block';
+      renderState(demoState);
+      if (showFeedback) showToast('Preview refreshed');
+    } else {
+      showToast('Error: ' + err.message);
+    }
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function runCmd(args, successMsg, demoUpdater) {
+  if (isBusy) return;
+  setBusy(true);
+  try {
+    if (isDemoMode) {
+      if (demoUpdater) demoUpdater();
+      renderState(demoState);
+      showToast(successMsg + ' (Preview)');
+      return;
+    }
+    const res = await ksuExec(MIYABI_BIN + ' ' + args);
+    if (res.errno !== 0) {
+      showToast('Failed: ' + (res.stderr || res.stdout || 'Unknown error'));
+    } else {
+      showToast(successMsg);
+    }
+    await refreshAll(false);
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+function onMasterToggle(enabled) {
+  runCmd(enabled ? 'on' : 'off', enabled ? 'GMS Breaker enabled' : 'GMS Breaker paused', () => {
+    demoState.enabled = enabled;
+    demoState.gms_proc_count = enabled ? 0 : 4;
+    demoState.gms_ram_mb = enabled ? 0 : 186;
+  });
+}
+
+function setMode(mode) {
+  runCmd('mode ' + mode, 'Mode switched to ' + mode.toUpperCase(), () => {
+    demoState.enabled = true;
+    demoState.mode = mode;
+    demoState.gms_proc_count = mode === 'extreme' ? 0 : (mode === 'balanced' ? 1 : 2);
+    demoState.gms_ram_mb = mode === 'extreme' ? 0 : (mode === 'balanced' ? 42 : 78);
+  });
+}
+
+function runGamingBoost() {
+  runCmd('gaming', 'Gaming Boost applied', () => {
+    demoState.enabled = true;
+    demoState.mode = 'extreme';
+    demoState.firewall = true;
+    demoState.gms_proc_count = 0;
+    demoState.gms_ram_mb = 0;
+  });
+}
+
+function runDeepClean() {
+  runCmd('clean', 'Deep Clean completed', () => {
+    demoState.gms_proc_count = 0;
+    demoState.gms_ram_mb = 0;
+  });
+}
+
+function setConfig(key, val) {
+  runCmd('config ' + key + ' ' + val, 'Updated ' + key + ' = ' + val, () => {
+    if (key === 'boot_delay') demoState[key] = Number(val);
+    else demoState[key] = !!val;
+    if (key === 'exclude_vending') {
+      const v = demoState.packages.find(p => p.pkg === 'com.android.vending');
+      if (v) v.excluded = !!val;
+    }
+  });
+}
+
+function togglePackage(pkg, shouldExclude) {
+  if (!/^[a-zA-Z0-9._]+$/.test(pkg)) return;
+  const cmd = shouldExclude ? ('exclude ' + pkg) : ('include ' + pkg);
+  runCmd(cmd, (shouldExclude ? 'Excluded ' : 'Included ') + pkg, () => {
+    const p = demoState.packages.find(x => x.pkg === pkg);
+    if (p) p.excluded = shouldExclude;
+    if (pkg === 'com.android.vending') demoState.exclude_vending = shouldExclude;
+  });
+}
+
+async function loadLogs() {
+  const box = document.getElementById('logBox');
+  if (isDemoMode) {
+    box.textContent = '[2026-11-22 04:20:01] [INFO] GMS Breaker Miyabi Core v3.0.0 Watchdog started (PID=4812).\n[2026-11-22 04:20:46] [INFO] Applying Mode: EXTREME (Full Runtime & Network Isolation)...\n[2026-11-22 04:20:48] [INFO] Firewall applied via native nftables (inet miyabi_core).\n[2026-11-22 04:20:48] [INFO] Apply complete (Mode=extreme, Targets=6, UIDs=9).';
+    return;
+  }
+  try {
+    const res = await ksuExec(MIYABI_BIN + ' log');
+    box.textContent = res.stdout.trim() || '[i] No logs recorded yet.';
+    box.scrollTop = box.scrollHeight;
+  } catch (e) {
+    box.textContent = 'Failed to read logs: ' + e.message;
+  }
+}
+
+async function clearLogs() {
+  if (isDemoMode) {
+    document.getElementById('logBox').textContent = '[i] Logs cleared (Preview).';
+    showToast('Logs cleared');
+    return;
+  }
+  await runCmd('log clear', 'Operational logs cleared');
+  loadLogs();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  refreshAll(false);
+});
+</script>
+</body>
+</html>
